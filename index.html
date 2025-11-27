@@ -28,9 +28,12 @@
     .app-header {
       background: linear-gradient(135deg, #111827 0%, #1f2937 55%, #273449 100%);
       padding: 16px 18px;
-      text-align: center;
+      /* text-align: center; */
       box-shadow: 0 16px 32px rgba(15, 23, 42, 0.45);
       position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
     .institutional-header {
       display: flex;
@@ -46,12 +49,13 @@
     }
     .institutional-header-right {
       display: flex;
-      flex-direction: column;
       align-items: center;
-      gap: 2px;
       position: absolute;
-      top: 16px;
+      top: 50%;
       right: 18px;
+      transform: translateY(-50%);
+      margin: 0;
+      padding: 0;
     }
     .institutional-header__logo {
       width: clamp(28px, 5vw, 60px);
@@ -82,12 +86,16 @@
       height: auto;
     }
     .institutional-header-right__author {
-      font-size: clamp(0.45rem, 1vw, 0.85rem);
+      font-size: clamp(0.52rem, 1vw, 0.92rem);
       color: #cbd5e1;
       margin: 0;
       font-weight: 300;
       font-family: Georgia, serif;
       font-style: italic;
+    }
+    .institutional-header-right__author-copyright {
+      font-size: 0.95em;
+      vertical-align: middle;
     }
     .app-header__content {
       max-width: 960px;
@@ -531,7 +539,7 @@
 </head>
 <body>
   <header class="app-header">
-    <div class="institutional-header">
+    <div class="institutional-header">   
       <svg
         class="institutional-header__logo"
         width="150"
@@ -595,14 +603,13 @@
       </div>
     </div>
     <div class="institutional-header-right">
-      <img src="logo-mio.png" alt="Logo" class="institutional-header-right__logo">
-      <p class="institutional-header-right__author">Luciano Aromi</p>
+      <p class="institutional-header-right__author"><span class="institutional-header-right__author-copyright">©</span> Luciano Aromi</p>
     </div>
     <div class="app-header__content">
       
       <div>
         <h1 class="app-header__title">Laboratorio de Tests de Hipótesis</h1>
-        <p class="app-header__subtitle">Visualizá y compará escenarios para tus análisis estadísticos</p>
+        <p class="app-header__subtitle">Visualizá y compará escenarios para tus análisis estadísticos.</p>
       </div>
     </div>
   </header>
