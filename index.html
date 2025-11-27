@@ -134,6 +134,12 @@
       flex-direction: column;
       gap: 4px;
     }
+    .control-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      width: 100%;
+    }
   </style>
 </head>
 <body>
@@ -143,6 +149,7 @@
       <option value="z" selected>Test Z (σ conocida)</option>
       <option value="t">Test t de Student (σ desconocida)</option>
       <option value="proporciones">Test de proporciones (una muestra)</option>
+      <option value="z_diff">Test Z: diferencia de medias (σ₁ y σ₂ conocidas)</option>
     </select>
   </div>
   <div class="panel">
@@ -170,7 +177,7 @@
           </select>
         </div>
 
-        <div class="control-group control-group-wide">
+        <div class="control-group control-group-wide" id="colaRadioGroup">
           <label>Tipo de test</label>
           <div class="radio-group">
             <label><input type="radio" name="cola" value="derecha" checked> <span id="colaDerechaText">Cola derecha (H₁: μ &gt; μ₀)</span></label>
@@ -205,18 +212,52 @@
         </div>
 
         <div class="control-group hidden" id="nPropGroup">
-          <label for="n_prop">Tamaño muestral ( n )</label>
+          <label for="n_prop">Tamaño muestral n</label>
           <input type="number" id="n_prop" step="1" min="1" value="100">
         </div>
 
         <div class="control-group hidden" id="xGroup">
-          <label for="x">Éxitos observados ( x )</label>
+          <label for="x">Éxitos observados x</label>
           <input type="number" id="x" step="1" min="0" value="15">
         </div>
 
         <div class="control-group hidden" id="p0Group">
-          <label for="p0">Proporción hipotética ( p₀ )</label>
+          <label for="p0">Proporción hipotética p₀</label>
           <input type="number" id="p0" step="0.01" min="0" max="1" value="0.5">
+        </div>
+
+        <div class="control-row" id="zDiffRow1">
+          <div class="control-group hidden" id="xbar1Group">
+            <label for="xbar1">Media muestral X̄₁</label>
+            <input type="number" id="xbar1" step="0.01" value="10">
+          </div>
+
+          <div class="control-group hidden" id="n1Group">
+            <label for="n1">Tamaño muestral n₁</label>
+            <input type="number" id="n1" step="1" min="1" value="40">
+          </div>
+
+          <div class="control-group hidden" id="sigma1Group">
+            <label for="sigma1">Desvío poblacional σ₁</label>
+            <input type="number" id="sigma1" step="0.01" value="2">
+          </div>
+        </div>
+
+        <div class="control-row" id="zDiffRow2">
+          <div class="control-group hidden" id="xbar2Group">
+            <label for="xbar2">Media muestral X̄₂</label>
+            <input type="number" id="xbar2" step="0.01" value="8">
+          </div>
+
+          <div class="control-group hidden" id="n2Group">
+            <label for="n2">Tamaño muestral n₂</label>
+            <input type="number" id="n2" step="1" min="1" value="35">
+          </div>
+
+          <div class="control-group hidden" id="sigma2Group">
+            <label for="sigma2">Desvío poblacional σ₂</label>
+            <input type="number" id="sigma2" step="0.01" value="2.5">
+          </div>
         </div>
 
         <div class="control-group-action">
@@ -236,6 +277,7 @@
       <div id="resultados" class="result-block">
         <strong>Resultados del test:</strong>
         <div id="zcalc"></div>
+          <div id="diffMedias"></div>
           <div id="phat"></div>
         <div id="pvalor"></div>
         <div id="decision"></div>
@@ -713,8 +755,10 @@
     function calcularZ() {
       const phatText = document.getElementById("phat");
       const advertencia = document.getElementById("advertencia");
+      const diffMedias = document.getElementById("diffMedias");
       if (phatText) phatText.textContent = "";
       if (advertencia) advertencia.textContent = "";
+      if (diffMedias) diffMedias.textContent = "";
       const tipoTest = document.getElementById("tipoTest").value;
       const xbar = parseFloat(document.getElementById("xbar").value);
       const mu0 = parseFloat(document.getElementById("mu0").value);
@@ -827,6 +871,8 @@
       const p0 = parseFloat(document.getElementById("p0").value);
       const alpha = parseFloat(document.getElementById("alpha").value);
       const cola = document.querySelector('input[name="cola"]:checked').value;
+      const diffMedias = document.getElementById("diffMedias");
+      if (diffMedias) diffMedias.textContent = "";
 
       if (isNaN(xInput) || isNaN(nInput) || isNaN(p0)) {
         alert("Completá todos los valores numéricos.");
@@ -919,10 +965,100 @@
       dibujar();
     }
 
+    function calcularZDiferencia() {
+      const phatText = document.getElementById("phat");
+      const advertencia = document.getElementById("advertencia");
+      const diffMedias = document.getElementById("diffMedias");
+      if (phatText) phatText.textContent = "";
+      if (advertencia) advertencia.textContent = "";
+      if (diffMedias) diffMedias.textContent = "";
+
+      const xbar1 = parseFloat(document.getElementById("xbar1").value);
+      const xbar2 = parseFloat(document.getElementById("xbar2").value);
+      const sigma1 = parseFloat(document.getElementById("sigma1").value);
+      const sigma2 = parseFloat(document.getElementById("sigma2").value);
+      const n1Input = parseFloat(document.getElementById("n1").value);
+      const n2Input = parseFloat(document.getElementById("n2").value);
+      const alpha = parseFloat(document.getElementById("alpha").value);
+      const cola = document.querySelector('input[name="cola"]:checked').value;
+      const delta0 = 0;
+
+      if ([xbar1, xbar2, sigma1, sigma2, n1Input, n2Input, alpha].some(v => isNaN(v))) {
+        alert("Completá todos los valores numéricos.");
+        return;
+      }
+
+      if (!Number.isInteger(n1Input) || !Number.isInteger(n2Input)) {
+        alert("n₁ y n₂ deben ser enteros.");
+        return;
+      }
+      const n1 = n1Input;
+      const n2 = n2Input;
+      if (n1 <= 0 || n2 <= 0) {
+        alert("n₁ y n₂ deben ser mayores a cero.");
+        return;
+      }
+      if (sigma1 <= 0 || sigma2 <= 0) {
+        alert("σ₁ y σ₂ deben ser mayores a cero.");
+        return;
+      }
+
+      const se = Math.sqrt((sigma1 * sigma1) / n1 + (sigma2 * sigma2) / n2);
+      if (!isFinite(se) || se <= 0) {
+        alert("La desviación estándar combinada no es válida para estos valores.");
+        return;
+      }
+
+      const diff = xbar1 - xbar2;
+      const estadistico = (diff - delta0) / se;
+
+      let p;
+      if (cola === "derecha") {
+        p = 1 - normalCDF(estadistico);
+      } else if (cola === "izquierda") {
+        p = normalCDF(estadistico);
+      } else {
+        p = 2 * (1 - normalCDF(Math.abs(estadistico)));
+      }
+      p = Math.min(Math.max(p, 0), 1);
+
+      const zcrit = getCriticalZ(alpha, "dos").zCritPos;
+      const margen = zcrit * se;
+      const li = diff - margen;
+      const ls = diff + margen;
+
+      document.getElementById("zObs").value = estadistico.toFixed(3);
+
+      const colaTexto = cola === "derecha" ? "derecha" : (cola === "izquierda" ? "izquierda" : "dos colas");
+      const conclusion = p <= alpha
+        ? `<span style='color:#c53030'><strong>Rechazamos H₀</strong></span> (p = ${p.toFixed(4)} ≤ α = ${alpha})`
+        : `<span style='color:#2b6cb0'><strong>No rechazamos H₀</strong></span> (p = ${p.toFixed(4)} &gt; α = ${alpha})`;
+
+      document.getElementById("zcalc").innerHTML =
+        `Estadístico Z calculado: <strong>${estadistico.toFixed(3)}</strong>`;
+
+      if (diffMedias) {
+        diffMedias.innerHTML = `Diferencia observada (X̄₁ − X̄₂): <strong>${diff.toFixed(3)}</strong>`;
+      }
+
+      document.getElementById("pvalor").innerHTML =
+        `p-valor (${colaTexto}): <strong>${p.toFixed(4)}</strong>`;
+
+      document.getElementById("decision").innerHTML =
+        `Decisión: ${conclusion}`;
+
+      document.getElementById("ic").innerHTML =
+        `IC ${(1 - alpha) * 100}% para μ₁ − μ₂: <strong>[${li.toFixed(3)}, ${ls.toFixed(3)}]</strong>`;
+
+      dibujar();
+    }
+
     function calcularTest() {
       const tipo = document.getElementById("tipoTest").value;
       if (tipo === "proporciones") {
         calcularProporciones();
+      } else if (tipo === "z_diff") {
+        calcularZDiferencia();
       } else {
         calcularZ();
       }
@@ -940,6 +1076,12 @@
       const xGroup = document.getElementById("xGroup");
       const nPropGroup = document.getElementById("nPropGroup");
       const p0Group = document.getElementById("p0Group");
+      const xbar1Group = document.getElementById("xbar1Group");
+      const xbar2Group = document.getElementById("xbar2Group");
+      const sigma1Group = document.getElementById("sigma1Group");
+      const sigma2Group = document.getElementById("sigma2Group");
+      const n1Group = document.getElementById("n1Group");
+      const n2Group = document.getElementById("n2Group");
       const heading = document.getElementById("testHeading");
       const intro = document.getElementById("testIntro");
       const statLabel = document.getElementById("statObservedLabel");
@@ -949,10 +1091,12 @@
       const colaDerechaText = document.getElementById("colaDerechaText");
       const colaIzquierdaText = document.getElementById("colaIzquierdaText");
       const colaDosText = document.getElementById("colaDosText");
+      const colaRadioGroup = document.getElementById("colaRadioGroup");
       const phatText = document.getElementById("phat");
       const advertencia = document.getElementById("advertencia");
+      const diffMedias = document.getElementById("diffMedias");
 
-      if (!tipoSelect || !zContent || !placeholder || !sigmaGroup || !sGroup || !nGroup || !xbarGroup || !mu0Group || !xGroup || !nPropGroup || !p0Group || !heading || !intro || !statLabel || !legendLabel || !btnCalcular || !curveLegend) {
+      if (!tipoSelect || !zContent || !placeholder || !sigmaGroup || !sGroup || !nGroup || !xbarGroup || !mu0Group || !xGroup || !nPropGroup || !p0Group || !xbar1Group || !xbar2Group || !sigma1Group || !sigma2Group || !n1Group || !n2Group || !heading || !intro || !statLabel || !legendLabel || !btnCalcular || !curveLegend || !colaRadioGroup) {
         return;
       }
 
@@ -969,6 +1113,13 @@
       xGroup.classList.add("hidden");
       nPropGroup.classList.add("hidden");
       p0Group.classList.add("hidden");
+      xbar1Group.classList.add("hidden");
+      xbar2Group.classList.add("hidden");
+      sigma1Group.classList.add("hidden");
+      sigma2Group.classList.add("hidden");
+      n1Group.classList.add("hidden");
+      n2Group.classList.add("hidden");
+      colaRadioGroup.classList.remove("hidden");
 
       if (tipo === "z") {
         sigmaGroup.classList.remove("hidden");
@@ -988,6 +1139,7 @@
         }
         if (phatText) phatText.textContent = "";
         if (advertencia) advertencia.textContent = "";
+        if (diffMedias) diffMedias.textContent = "";
       } else if (tipo === "t") {
         sGroup.classList.remove("hidden");
         xbarGroup.classList.remove("hidden");
@@ -1006,6 +1158,7 @@
         }
         if (phatText) phatText.textContent = "";
         if (advertencia) advertencia.textContent = "";
+        if (diffMedias) diffMedias.textContent = "";
       } else if (tipo === "proporciones") {
         xGroup.classList.remove("hidden");
         nPropGroup.classList.remove("hidden");
@@ -1021,6 +1174,29 @@
           colaIzquierdaText.innerHTML = "Cola izquierda (H₁: p &lt; p₀)";
           colaDosText.innerHTML = "Dos colas (H₁: p ≠ p₀)";
         }
+        if (diffMedias) diffMedias.textContent = "";
+      } else if (tipo === "z_diff") {
+        colaRadioGroup.classList.remove("hidden");
+        xbar1Group.classList.remove("hidden");
+        n1Group.classList.remove("hidden");
+        sigma1Group.classList.remove("hidden");
+        xbar2Group.classList.remove("hidden");
+        n2Group.classList.remove("hidden");
+        sigma2Group.classList.remove("hidden");
+        heading.textContent = "Test Z: diferencia de medias (σ₁ y σ₂ conocidas)";
+        intro.innerHTML = "Se muestra la distribución normal estándar N(0,1), la región de rechazo según α y tipo de cola,<br>y la posición del estadístico observado <strong>z</strong> asociado a μ₁ − μ₂.";
+        statLabel.textContent = "Estadístico observado z";
+        legendLabel.textContent = "z observado";
+        btnCalcular.textContent = "Calcular Z";
+        curveLegend.textContent = "Curva: densidad de la normal estándar N(0,1).";
+        if (colaDerechaText && colaIzquierdaText && colaDosText) {
+          colaDerechaText.innerHTML = "Cola derecha (H₁: μ₁ − μ₂ &gt; Δ₀)";
+          colaIzquierdaText.innerHTML = "Cola izquierda (H₁: μ₁ − μ₂ &lt; Δ₀)";
+          colaDosText.innerHTML = "Dos colas (H₁: μ₁ − μ₂ ≠ Δ₀)";
+        }
+        if (phatText) phatText.textContent = "";
+        if (advertencia) advertencia.textContent = "";
+        if (diffMedias) diffMedias.textContent = "";
       }
 
       dibujar();
@@ -1032,8 +1208,8 @@
     }
     document.getElementById("alpha").addEventListener("change", dibujar);
     document.getElementById("zObs").addEventListener("change", dibujar);
-    document.querySelectorAll('input[name="cola"]').forEach(r => {
-      r.addEventListener("change", dibujar);
+    document.querySelectorAll('input[name="cola"]').forEach(radio => {
+      radio.addEventListener("change", dibujar);
     });
     document.getElementById("btnCalcularZ").addEventListener("click", calcularTest);
     document.getElementById("tipoTest").addEventListener("change", actualizarTipoTest);
