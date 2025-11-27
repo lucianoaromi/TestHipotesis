@@ -216,12 +216,32 @@
       font-weight: 500;
     }
     .decision-rechazo {
-      color: #c53030;
+      color: #facc15;
       font-weight: bold;
     }
+    .decision-rechazo::before {
+      content: '';
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #e53e3e;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
     .decision-norechazo {
-      color: #2b6cb0;
+      color: #facc15;
       font-weight: bold;
+    }
+    .decision-norechazo::before {
+      content: '';
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #38bdf8;
+      margin-right: 6px;
+      vertical-align: middle;
     }
     canvas {
       border-radius: 12px;
