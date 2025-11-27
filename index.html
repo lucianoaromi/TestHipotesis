@@ -153,14 +153,14 @@
       <option value="z" selected>Test Z (σ conocida)</option>
       <option value="t">Test t de Student (σ desconocida)</option>
       <option value="proporciones">Test de Proporciones (una muestra)</option>
-      <option value="z_diff">Test Z: diferencia de medias (σ₁ y σ₂ conocidas)</option>
-      <option value="t_diff">Test t: diferencia de medias (σ₁ y σ₂ desconocidas)</option>
-      <option value="prop_diff">Test Z: diferencia de proporciones</option>
+      <option value="z_diff">Test Z: Diferencia de Medias (σ₁ y σ₂ conocidas)</option>
+      <option value="t_diff">Test t: Diferencia de Medias (σ₁ y σ₂ desconocidas)</option>
+      <option value="prop_diff">Test Z: Diferencia de Proporciones</option>
     </select>
   </div>
   <div class="panel">
     <div id="testZContent">
-      <h1 id="testHeading">Distribución Z en un test de hipótesis</h1>
+      <h1 id="testHeading">Distribución Z</h1>
       <p class="intro-text" id="testIntro">
         Se muestra la distribución normal estándar N(0,1), la región de rechazo según α y tipo de cola,
         y la posición del estadístico observado <strong>z</strong>.
@@ -1446,7 +1446,7 @@
         xbarGroup.classList.remove("hidden");
         mu0Group.classList.remove("hidden");
         nGroup.classList.remove("hidden");
-        heading.textContent = "Distribución Z en un test de hipótesis";
+        heading.textContent = "Distribución Z";
         intro.innerHTML = "Se muestra la distribución normal estándar N(0,1), la región de rechazo según α y tipo de cola,<br>y la posición del estadístico observado <strong>z</strong>.";
         statLabel.textContent = "Estadístico observado z";
         legendLabel.textContent = "z observado";
@@ -1465,7 +1465,7 @@
         xbarGroup.classList.remove("hidden");
         mu0Group.classList.remove("hidden");
         nGroup.classList.remove("hidden");
-        heading.textContent = "Distribución t de Student en un test de hipótesis";
+        heading.textContent = "Distribución t de Student";
         intro.innerHTML = "Se muestra la distribución t de Student con gl = n − 1, la región de rechazo según α y tipo de cola,<br>y la posición del estadístico observado <strong>t</strong>.";
         statLabel.textContent = "Estadístico observado t";
         legendLabel.textContent = "t observado";
@@ -1483,7 +1483,7 @@
         xGroup.classList.remove("hidden");
         nPropGroup.classList.remove("hidden");
         p0Group.classList.remove("hidden");
-        heading.textContent = "Test de proporciones (una muestra)";
+        heading.textContent = "Test de Proporciones (una muestra)";
         intro.innerHTML = "Se muestra la distribución normal estándar N(0,1), la región de rechazo según α y tipo de cola,<br>y la posición del estadístico observado <strong>z</strong> para la proporción.";
         statLabel.textContent = "Estadístico observado z";
         legendLabel.textContent = "z observado";
@@ -1507,7 +1507,7 @@
         s2Group.classList.add("hidden");
         x1Group.classList.add("hidden");
         x2Group.classList.add("hidden");
-        heading.textContent = "Test Z: diferencia de medias (σ₁ y σ₂ conocidas)";
+        heading.textContent = "Test Z: Diferencia de Medias (σ₁ y σ₂ conocidas)";
         intro.innerHTML = "Se muestra la distribución normal estándar N(0,1), la región de rechazo según α y tipo de cola,<br>y la posición del estadístico observado <strong>z</strong> asociado a μ₁ − μ₂.";
         statLabel.textContent = "Estadístico observado z";
         legendLabel.textContent = "z observado";
@@ -1533,7 +1533,7 @@
         sigma2Group.classList.add("hidden");
         x1Group.classList.add("hidden");
         x2Group.classList.add("hidden");
-        heading.textContent = "Test t: diferencia de medias (σ₁ y σ₂ desconocidas)";
+        heading.textContent = "Test t: Diferencia de Medias (σ₁ y σ₂ desconocidas)";
         intro.innerHTML = "Se muestra la distribución t de Student con gl de Welch, la región de rechazo según α y tipo de cola,<br>y la posición del estadístico observado <strong>t</strong> asociado a μ₁ − μ₂.";
         statLabel.textContent = "Estadístico observado t";
         legendLabel.textContent = "t observado";
@@ -1553,7 +1553,7 @@
         n1Group.classList.remove("hidden");
         x2Group.classList.remove("hidden");
         n2Group.classList.remove("hidden");
-        heading.textContent = "Test Z: diferencia de proporciones";
+        heading.textContent = "Test Z: Diferencia de Proporciones";
         intro.innerHTML = "Se muestra la distribución normal estándar N(0,1), la región de rechazo según α y tipo de cola,<br>y la posición del estadístico observado <strong>z</strong> asociado a p₁ − p₂.";
         statLabel.textContent = "Estadístico observado z";
         legendLabel.textContent = "z observado";
