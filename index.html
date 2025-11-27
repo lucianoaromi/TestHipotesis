@@ -1218,6 +1218,193 @@
     document.getElementById("btnCalcularZ").addEventListener("click", calcularTest);
     document.getElementById("tipoTest").addEventListener("change", actualizarTipoTest);
 
+//--------------------------- Segmento Funcion Generadora de JSON para pruebas ---------------------------
+
+    // Genera un número entero aleatorio entre min y max (incluidos)
+    function randInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    // Genera un número real aleatorio entre min y max
+    function randFloat(min, max) {
+    return min + Math.random() * (max - min);
+    }
+
+    // Devuelve un elemento aleatorio de un array
+    function pick(arr) {
+    return arr[randInt(0, arr.length - 1)];
+    }
+
+    // Calcula p-valor para Z según tipo de cola
+    function pValorNormal(stat, cola) {
+    if (cola === "derecha") return 1 - normalCDF(stat);
+    if (cola === "izquierda") return normalCDF(stat);
+    return 2 * (1 - normalCDF(Math.abs(stat)));
+    }
+
+    // Calcula p-valor para t según tipo de cola
+    function pValorT(stat, df, cola) {
+    if (cola === "derecha") return 1 - tCDF(stat, df);
+    if (cola === "izquierda") return tCDF(stat, df);
+    return 2 * (1 - tCDF(Math.abs(stat), df));
+    }
+
+    // Genera un array de casos aleatorios con todos los datos calculados
+    function generarCasosTestHipotesis(cantidad = 300) {
+    const tipos = ["z", "t", "proporciones", "z_diff"];
+    const colas = ["derecha", "izquierda", "dos"];
+    const alphas = [0.20, 0.15, 0.10, 0.08, 0.05, 0.025, 0.02, 0.01, 0.005, 0.001];
+
+    const casos = [];
+
+    for (let i = 0; i < cantidad; i++) {
+        const tipo = pick(tipos);
+        const cola = pick(colas);
+        const alpha = pick(alphas);
+
+        let parametros = {};
+        let estadistico;
+        let pValor;
+        let IC = { li: null, ls: null };
+
+        if (tipo === "z") {
+        // Z una muestra
+        const xbar = parseFloat(randFloat(5, 50).toFixed(3));
+        const mu0 = parseFloat(randFloat(5, 50).toFixed(3));
+        const sigma = parseFloat(randFloat(1, 10).toFixed(3));
+        const n = randInt(10, 200);
+
+        const se = sigma / Math.sqrt(n);
+        estadistico = (xbar - mu0) / se;
+        pValor = pValorNormal(estadistico, cola);
+
+        const zcrit = getCriticalZ(alpha, "dos").zCritPos;
+        const margen = zcrit * se;
+        IC.li = xbar - margen;
+        IC.ls = xbar + margen;
+
+        parametros = { xbar, mu0, sigma, n };
+        } else if (tipo === "t") {
+        // t una muestra
+        const xbar = parseFloat(randFloat(5, 50).toFixed(3));
+        const mu0 = parseFloat(randFloat(5, 50).toFixed(3));
+        const s = parseFloat(randFloat(1, 10).toFixed(3));
+        const n = randInt(3, 200); // df >= 2
+
+        const se = s / Math.sqrt(n);
+        const df = n - 1;
+        estadistico = (xbar - mu0) / se;
+        pValor = pValorT(estadistico, df, cola);
+
+        const tcrit = tInv(1 - alpha / 2, df);
+        const margen = tcrit * se;
+        IC.li = xbar - margen;
+        IC.ls = xbar + margen;
+
+        parametros = { xbar, mu0, s, n };
+        } else if (tipo === "proporciones") {
+        // Proporciones una muestra
+        let n = randInt(20, 300);
+        let p0 = randFloat(0.1, 0.9);
+
+        // Forzar np0 y n(1-p0) >= 10 para buena aproximación normal
+        if (n * p0 < 10 || n * (1 - p0) < 10) {
+            n = 200;
+            p0 = 0.5;
+        }
+
+        const x = randInt(0, n);
+        const phat = x / n;
+
+        const se = Math.sqrt(p0 * (1 - p0) / n);
+        estadistico = (phat - p0) / se;
+        pValor = pValorNormal(estadistico, cola);
+
+        const zcrit = getCriticalZ(alpha, "dos").zCritPos;
+        const sePhat = Math.sqrt(phat * (1 - phat) / n);
+        let li = phat - zcrit * sePhat;
+        let ls = phat + zcrit * sePhat;
+        li = Math.max(0, li);
+        ls = Math.min(1, ls);
+        IC.li = li;
+        IC.ls = ls;
+
+        parametros = { x, n, p0: parseFloat(p0.toFixed(3)) };
+        } else if (tipo === "z_diff") {
+        // Z diferencia de medias (σ1 y σ2 conocidas)
+        const xbar1 = parseFloat(randFloat(5, 50).toFixed(3));
+        const xbar2 = parseFloat(randFloat(5, 50).toFixed(3));
+        const sigma1 = parseFloat(randFloat(1, 10).toFixed(3));
+        const sigma2 = parseFloat(randFloat(1, 10).toFixed(3));
+        const n1 = randInt(10, 200);
+        const n2 = randInt(10, 200);
+        const delta0 = 0;
+
+        const diff = xbar1 - xbar2;
+        const se = Math.sqrt((sigma1 * sigma1) / n1 + (sigma2 * sigma2) / n2);
+        estadistico = (diff - delta0) / se;
+        pValor = pValorNormal(estadistico, cola);
+
+        const zcrit = getCriticalZ(alpha, "dos").zCritPos;
+        const margen = zcrit * se;
+        IC.li = diff - margen;
+        IC.ls = diff + margen;
+
+        parametros = { xbar1, xbar2, sigma1, sigma2, n1, n2 };
+        }
+
+        // Redondeos como en la UI
+        const estadistico_redondeado = parseFloat(estadistico.toFixed(3));
+        const p_valor_clamp = Math.min(Math.max(pValor, 0), 1);
+        const p_valor_redondeado = parseFloat(p_valor_clamp.toFixed(4));
+
+        let liRed = IC.li;
+        let lsRed = IC.ls;
+
+        if (tipo === "proporciones") {
+        liRed = parseFloat(IC.li.toFixed(4));
+        lsRed = parseFloat(IC.ls.toFixed(4));
+        } else {
+        liRed = parseFloat(IC.li.toFixed(3));
+        lsRed = parseFloat(IC.ls.toFixed(3));
+        }
+
+        casos.push({
+        tipo,
+        cola,
+        alpha,
+        parametros,
+        estadistico,
+        estadistico_redondeado,
+        p_valor: pValor,
+        p_valor_redondeado,
+        IC: {
+            li: liRed,
+            ls: lsRed
+        }
+        });
+    }
+
+    return casos;
+    }
+
+    // Exporta los casos como un archivo JSON descargable
+    function exportarCasosJSON(cantidad = 300) {
+    const casos = generarCasosTestHipotesis(cantidad);
+    const blob = new Blob([JSON.stringify(casos, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "test_cases.json";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    console.log(`✅ Generado test_cases.json con ${cantidad} casos.`);
+    }
+
+//----------------------------------------------------------------------------------------------------------------
+
     window.addEventListener("load", () => {
       actualizarTipoTest();
     });
