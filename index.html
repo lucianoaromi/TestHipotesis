@@ -196,13 +196,21 @@
       color: inherit;
       font-weight: 500;
     }
+    .decision-rechazo {
+      color: #c53030;
+      font-weight: bold;
+    }
+    .decision-norechazo {
+      color: #2b6cb0;
+      font-weight: bold;
+    }
     canvas {
       border-radius: 12px;
       border: 1px solid #cbd5e0;
       background: #ffffff;
       box-shadow: inset 0 3px 10px rgba(15, 23, 42, 0.05);
-      width: min(100%, 700px);
-      max-width: 700px;
+      width: min(100%, 640px);
+      max-width: 640px;
       height: 260px;
       margin: 0 auto;
       display: block;
@@ -263,13 +271,16 @@
     }
     .result-block {
       margin: 14px auto 0;
-      font-size: 0.84rem;
+      font-size: 0.91rem;
       background: #f0f4ff;
       border: 1px solid #c3dafe;
       border-radius: 14px;
       padding: 12px 14px;
       box-shadow: 0 8px 18px rgba(99, 179, 237, 0.22);
       max-width: 700px;
+    }
+    #resultados {
+      font-size: 0.85rem !important;
     }
     .result-block strong {
       font-weight: 700;
@@ -507,12 +518,12 @@
           </div>
           <div class="control-stack">
             <label for="zObs" id="statObservedLabel">Estadístico observado z</label>
-            <input type="number" id="zObs" value="1.8" step="0.1" min="-10" max="10">
+            <input type="number" id="zObs" value="1.8" step="0.1" min="-10" max="10" readonly>
           </div>
         </div>
       </div>
 
-      <canvas id="grafico" class="chart-canvas" width="800" height="350"></canvas>
+      <canvas id="grafico" class="chart-canvas" width="640" height="350"></canvas>
 
       <div id="resultados" class="result-block">
         <strong>Resultados del test:</strong>
@@ -762,8 +773,21 @@
     function dibujar() {
       const canvas = document.getElementById("grafico");
       const ctx = canvas.getContext("2d");
-      const width = canvas.width;
-      const height = canvas.height;
+      const pixelRatio = window.devicePixelRatio || 1;
+      const displayWidth = Math.round(canvas.clientWidth || canvas.width);
+      const displayHeight = Math.round(canvas.clientHeight || canvas.height / pixelRatio);
+      const scaledWidth = Math.round(displayWidth * pixelRatio);
+      const scaledHeight = Math.round(displayHeight * pixelRatio);
+
+      if (canvas.width !== scaledWidth || canvas.height !== scaledHeight) {
+        canvas.width = scaledWidth;
+        canvas.height = scaledHeight;
+      }
+
+      ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+
+      const width = displayWidth;
+      const height = displayHeight;
 
       const tipoTest = document.getElementById("tipoTest").value;
       let df = 1;
@@ -1125,9 +1149,9 @@
 
       let conclusion = "";
       if (p <= alpha) {
-        conclusion = `<span style='color:#c53030'><strong>Rechazamos H₀</strong></span> (p = ${p.toFixed(4)} ≤ α = ${alpha})`;
+        conclusion = `<span class="decision-rechazo">Rechazamos H₀</span> (p = ${p.toFixed(4)} ≤ α = ${alpha})`;
       } else {
-        conclusion = `<span style='color:#2b6cb0'><strong>No rechazamos H₀</strong></span> (p = ${p.toFixed(4)} &gt; α = ${alpha})`;
+        conclusion = `<span class="decision-norechazo">No rechazamos H₀</span> (p = ${p.toFixed(4)} &gt; α = ${alpha})`;
       }
 
       const tituloEstadistico = statLabel === "Z" ? "Estadístico Z calculado" : "Estadístico t calculado";
@@ -1217,8 +1241,8 @@
 
       const colaTexto = cola === "derecha" ? "derecha" : (cola === "izquierda" ? "izquierda" : "dos colas");
       const conclusion = p <= alpha
-        ? `<span style='color:#c53030'><strong>Rechazamos H₀</strong></span> (p = ${p.toFixed(4)} ≤ α = ${alpha})`
-        : `<span style='color:#2b6cb0'><strong>No rechazamos H₀</strong></span> (p = ${p.toFixed(4)} &gt; α = ${alpha})`;
+        ? `<span class="decision-rechazo">Rechazamos H₀</span> (p = ${p.toFixed(4)} ≤ α = ${alpha})`
+        : `<span class="decision-norechazo">No rechazamos H₀</span> (p = ${p.toFixed(4)} &gt; α = ${alpha})`;
 
       document.getElementById("zcalc").innerHTML =
         `Estadístico Z calculado: <strong>${estadistico.toFixed(3)}</strong>`;
@@ -1329,8 +1353,8 @@
 
       const colaTexto = cola === "derecha" ? "derecha" : (cola === "izquierda" ? "izquierda" : "dos colas");
       const conclusion = p <= alpha
-        ? `<span style='color:#c53030'><strong>Rechazamos H₀</strong></span> (p = ${p.toFixed(4)} ≤ α = ${alpha})`
-        : `<span style='color:#2b6cb0'><strong>No rechazamos H₀</strong></span> (p = ${p.toFixed(4)} &gt; α = ${alpha})`;
+        ? `<span class="decision-rechazo">Rechazamos H₀</span> (p = ${p.toFixed(4)} ≤ α = ${alpha})`
+        : `<span class="decision-norechazo">No rechazamos H₀</span> (p = ${p.toFixed(4)} &gt; α = ${alpha})`;
 
       document.getElementById("zcalc").innerHTML =
         `Estadístico Z calculado: <strong>${estadistico.toFixed(3)}</strong>`;
@@ -1434,8 +1458,8 @@
 
       const colaTexto = cola === "derecha" ? "derecha" : (cola === "izquierda" ? "izquierda" : "dos colas");
       const conclusion = p <= alpha
-        ? `<span style='color:#c53030'><strong>Rechazamos H₀</strong></span> (p = ${p.toFixed(4)} ≤ α = ${alpha})`
-        : `<span style='color:#2b6cb0'><strong>No rechazamos H₀</strong></span> (p = ${p.toFixed(4)} &gt; α = ${alpha})`;
+        ? `<span class="decision-rechazo">Rechazamos H₀</span> (p = ${p.toFixed(4)} ≤ α = ${alpha})`
+        : `<span class="decision-norechazo">No rechazamos H₀</span> (p = ${p.toFixed(4)} &gt; α = ${alpha})`;
 
       document.getElementById("zcalc").innerHTML =
         `Estadístico Z calculado: <strong>${estadistico.toFixed(3)}</strong>`;
@@ -1543,8 +1567,8 @@
 
       const colaTexto = cola === "derecha" ? "derecha" : (cola === "izquierda" ? "izquierda" : "dos colas");
       const conclusion = p <= alpha
-        ? `<span style='color:#c53030'><strong>Rechazamos H₀</strong></span> (p = ${p.toFixed(4)} ≤ α = ${alpha})`
-        : `<span style='color:#2b6cb0'><strong>No rechazamos H₀</strong></span> (p = ${p.toFixed(4)} &gt; α = ${alpha})`;
+        ? `<span class="decision-rechazo">Rechazamos H₀</span> (p = ${p.toFixed(4)} ≤ α = ${alpha})`
+        : `<span class="decision-norechazo">No rechazamos H₀</span> (p = ${p.toFixed(4)} &gt; α = ${alpha})`;
 
       document.getElementById("zcalc").innerHTML =
         `Estadístico t calculado: <strong>${estadistico.toFixed(3)}</strong>`;
