@@ -5,6 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Distribución en un Test de Hipótesis (Z)</title>
   <style>
+        /* Punto interno rojo suave para radio seleccionado */
+        .radio-group input[type="radio"]:checked::before {
+          content: '';
+          display: block;
+          width: 0.65em;
+          height: 0.65em;
+          border-radius: 50%;
+          background: #cc4444;
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          box-shadow: 0 0 0 1.5px #fff;
+        }
     :root {
       color-scheme: light;
     }
@@ -283,7 +297,7 @@
       font-size: 0.9rem;
     }
     .radio-group input[type="radio"] {
-      position: static;
+      position: relative;
       opacity: 1;
       pointer-events: auto;
       margin: 0;
@@ -1519,14 +1533,11 @@
     }
 
     function calcularProporcionesDiferencia() {
-      const phatText = document.getElementById("phat");
-      const advertencia = document.getElementById("advertencia");
-      const diffMedias = document.getElementById("diffMedias");
-      const criticoText = document.getElementById("critico");
-      if (phatText) phatText.textContent = "";
-      if (advertencia) advertencia.textContent = "";
-      if (diffMedias) diffMedias.textContent = "";
-      if (criticoText) criticoText.textContent = "";
+      // Limpiar campos solo si existen
+      if (document.getElementById("phat")) document.getElementById("phat").textContent = "";
+      if (document.getElementById("advertencia")) document.getElementById("advertencia").textContent = "";
+      if (document.getElementById("diffMedias")) document.getElementById("diffMedias").textContent = "";
+      if (document.getElementById("critico")) document.getElementById("critico").textContent = "";
 
       const x1Input = parseFloat(document.getElementById("x1").value);
       const n1Input = parseFloat(document.getElementById("n1").value);
@@ -1602,21 +1613,12 @@
       document.getElementById("zcalc").innerHTML =
         `Estadístico Z calculado: <strong>${estadistico.toFixed(3)}</strong>`;
 
-      const criticos = getCriticalZ(alpha, cola);
-      if (criticoText) {
-        if (cola === "dos") {
-          criticoText.innerHTML = `Valor crítico: <strong>[${criticos.zCritNeg.toFixed(3)} , ${criticos.zCritPos.toFixed(3)}]</strong>`;
-        } else if (cola === "derecha") {
-          criticoText.innerHTML = `Valor crítico (cola derecha): <strong>${criticos.zCritPos.toFixed(3)}</strong>`;
-        } else {
-          criticoText.innerHTML = `Valor crítico (cola izquierda): <strong>${criticos.zCritNeg.toFixed(3)}</strong>`;
-        }
-      }
-
+      const diffMedias = document.getElementById("diffMedias");
       if (diffMedias) {
         diffMedias.innerHTML = `Proporciones muestrales: p₁ = <strong>${p1.toFixed(4)}</strong>, p₂ = <strong>${p2.toFixed(4)}</strong>`;
       }
 
+      const phatText = document.getElementById("phat");
       if (phatText) {
         phatText.innerHTML = `Diferencia p₁ − p₂ observada: <strong>${diff.toFixed(4)}</strong>`;
       }
