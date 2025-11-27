@@ -366,6 +366,79 @@
 
       ctx.restore();
 
+      // ----- SOMBREADO DEL P-VALOR -----
+      ctx.save();
+      ctx.fillStyle = "rgba(99, 179, 237, 0.35)"; // celeste
+
+      if (!isNaN(zObs)) {
+
+        // --- COLA DERECHA ---
+        if (cola === "derecha") {
+
+          ctx.beginPath();
+          const start = Math.max(zObs, zMin);
+
+          ctx.moveTo(xToCanvas(start), baseY);
+
+          for (let z = start; z <= zMax; z += 0.01) {
+            ctx.lineTo(xToCanvas(z), yToCanvas(normalPDF(z)));
+          }
+
+          ctx.lineTo(xToCanvas(zMax), baseY);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        // --- COLA IZQUIERDA ---
+        if (cola === "izquierda") {
+
+          ctx.beginPath();
+          const end = Math.min(zObs, zMax);
+
+          ctx.moveTo(xToCanvas(end), baseY);
+
+          for (let z = end; z >= zMin; z -= 0.01) {
+            ctx.lineTo(xToCanvas(z), yToCanvas(normalPDF(z)));
+          }
+
+          ctx.lineTo(xToCanvas(zMin), baseY);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        // --- DOS COLAS ---
+        if (cola === "dos") {
+
+          const zAbs = Math.abs(zObs);
+
+          // COLA DERECHA
+          ctx.beginPath();
+          ctx.moveTo(xToCanvas(zAbs), baseY);
+
+          for (let z = zAbs; z <= zMax; z += 0.01) {
+            ctx.lineTo(xToCanvas(z), yToCanvas(normalPDF(z)));
+          }
+
+          ctx.lineTo(xToCanvas(zMax), baseY);
+          ctx.closePath();
+          ctx.fill();
+
+          // COLA IZQUIERDA
+          ctx.beginPath();
+          ctx.moveTo(xToCanvas(-zAbs), baseY);
+
+          for (let z = -zAbs; z >= zMin; z -= 0.01) {
+            ctx.lineTo(xToCanvas(z), yToCanvas(normalPDF(z)));
+          }
+
+          ctx.lineTo(xToCanvas(zMin), baseY);
+          ctx.closePath();
+          ctx.fill();
+        }
+      }
+
+      ctx.restore();
+
       ctx.strokeStyle = "#2b6cb0";
       ctx.lineWidth = 2;
       ctx.beginPath();
