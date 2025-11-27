@@ -154,6 +154,8 @@
       <option value="t">Test t de Student (σ desconocida)</option>
       <option value="proporciones">Test de Proporciones (una muestra)</option>
       <option value="z_diff">Test Z: diferencia de medias (σ₁ y σ₂ conocidas)</option>
+      <option value="t_diff">Test t: diferencia de medias (σ₁ y σ₂ desconocidas)</option>
+      <option value="prop_diff">Test Z: diferencia de proporciones</option>
     </select>
   </div>
   <div class="panel">
@@ -241,9 +243,19 @@
             <input type="number" id="n1" step="1" min="1" value="40">
           </div>
 
+          <div class="control-group hidden" id="x1Group">
+            <label for="x1">Éxitos muestra 1 x₁</label>
+            <input type="number" id="x1" step="1" min="0" value="20">
+          </div>
+
           <div class="control-group hidden" id="sigma1Group">
             <label for="sigma1">Desvío poblacional σ₁</label>
             <input type="number" id="sigma1" step="0.01" value="2">
+          </div>
+
+          <div class="control-group hidden" id="s1Group">
+            <label for="s1">Desvío muestral s₁</label>
+            <input type="number" id="s1" step="0.01" value="2">
           </div>
         </div>
 
@@ -258,9 +270,19 @@
             <input type="number" id="n2" step="1" min="1" value="35">
           </div>
 
+          <div class="control-group hidden" id="x2Group">
+            <label for="x2">Éxitos muestra 2 x₂</label>
+            <input type="number" id="x2" step="1" min="0" value="18">
+          </div>
+
           <div class="control-group hidden" id="sigma2Group">
             <label for="sigma2">Desvío poblacional σ₂</label>
             <input type="number" id="sigma2" step="0.01" value="2.5">
+          </div>
+
+          <div class="control-group hidden" id="s2Group">
+            <label for="s2">Desvío muestral s₂</label>
+            <input type="number" id="s2" step="0.01" value="2.5">
           </div>
         </div>
 
@@ -532,12 +554,26 @@
       if (tipoTest === "t") {
         const nValor = parseInt(document.getElementById("n").value, 10);
         df = Math.max((isNaN(nValor) ? 1 : nValor - 1), 1);
+      } else if (tipoTest === "t_diff") {
+        const n1Valor = parseInt(document.getElementById("n1").value, 10);
+        const n2Valor = parseInt(document.getElementById("n2").value, 10);
+        const s1Valor = parseFloat(document.getElementById("s1").value);
+        const s2Valor = parseFloat(document.getElementById("s2").value);
+        if (!isNaN(n1Valor) && !isNaN(n2Valor) && !isNaN(s1Valor) && !isNaN(s2Valor) && n1Valor > 1 && n2Valor > 1 && s1Valor > 0 && s2Valor > 0) {
+          const v1 = (s1Valor * s1Valor) / n1Valor;
+          const v2 = (s2Valor * s2Valor) / n2Valor;
+          const denom = (Math.pow(v1, 2) / (n1Valor - 1)) + (Math.pow(v2, 2) / (n2Valor - 1));
+          if (denom > 0) {
+            df = Math.max(Math.pow(v1 + v2, 2) / denom, 1);
+          }
+        }
       }
       const alpha = document.getElementById("alpha").value;
       const cola = document.querySelector('input[name="cola"]:checked').value;
       const zObs = parseFloat(document.getElementById("zObs").value);
 
-      let rango = tipoTest === "t" ? 5 : 4;
+      const usaT = tipoTest === "t" || tipoTest === "t_diff";
+      let rango = usaT ? 5 : 4;
       if (!isNaN(zObs)) {
         const ajuste = Math.ceil(Math.abs(zObs)) + 1;
         rango = Math.min(10, Math.max(rango, ajuste));
@@ -546,10 +582,10 @@
       const zMax = rango;
       const zRange = zMax - zMin;
 
-      const pdf = tipoTest === "t" ? (x) => tPDF(x, df) : normalPDF;
-      const crit = tipoTest === "t" ? getCriticalT(alpha, cola, df) : getCriticalZ(alpha, cola);
+      const pdf = usaT ? (x) => tPDF(x, df) : normalPDF;
+      const crit = usaT ? getCriticalT(alpha, cola, df) : getCriticalZ(alpha, cola);
       const yMax = pdf(0);
-      const statPrefix = tipoTest === "t" ? "t" : "z";
+      const statPrefix = usaT ? "t" : "z";
 
       function xToCanvas(z) {
         return ((z - zMin) / zRange) * width;
@@ -969,6 +1005,114 @@
       dibujar();
     }
 
+    function calcularProporcionesDiferencia() {
+      const phatText = document.getElementById("phat");
+      const advertencia = document.getElementById("advertencia");
+      const diffMedias = document.getElementById("diffMedias");
+      if (phatText) phatText.textContent = "";
+      if (advertencia) advertencia.textContent = "";
+      if (diffMedias) diffMedias.textContent = "";
+
+      const x1Input = parseFloat(document.getElementById("x1").value);
+      const n1Input = parseFloat(document.getElementById("n1").value);
+      const x2Input = parseFloat(document.getElementById("x2").value);
+      const n2Input = parseFloat(document.getElementById("n2").value);
+      const alpha = parseFloat(document.getElementById("alpha").value);
+      const cola = document.querySelector('input[name="cola"]:checked').value;
+
+      if ([x1Input, n1Input, x2Input, n2Input, alpha].some(v => isNaN(v))) {
+        alert("Completá todos los valores numéricos.");
+        return;
+      }
+
+      if (!Number.isInteger(n1Input) || !Number.isInteger(n2Input)) {
+        alert("n₁ y n₂ deben ser enteros.");
+        return;
+      }
+      if (!Number.isInteger(x1Input) || !Number.isInteger(x2Input)) {
+        alert("x₁ y x₂ deben ser enteros.");
+        return;
+      }
+
+      const n1 = n1Input;
+      const n2 = n2Input;
+      const x1 = x1Input;
+      const x2 = x2Input;
+
+      if (n1 <= 0 || n2 <= 0) {
+        alert("n₁ y n₂ deben ser mayores a cero.");
+        return;
+      }
+      if (x1 < 0 || x1 > n1 || x2 < 0 || x2 > n2) {
+        alert("x₁ y x₂ deben estar entre 0 y n correspondiente.");
+        return;
+      }
+
+      const totalN = n1 + n2;
+      if (totalN <= 0) {
+        alert("La suma de tamaños muestrales debe ser mayor a cero.");
+        return;
+      }
+
+      const p1 = x1 / n1;
+      const p2 = x2 / n2;
+      const phatComb = (x1 + x2) / totalN;
+      const se = Math.sqrt(phatComb * (1 - phatComb) * (1 / n1 + 1 / n2));
+
+      if (!isFinite(se) || se <= 0) {
+        alert("La desviación estándar combinada no es válida para estos valores.");
+        return;
+      }
+
+      const diff = p1 - p2;
+      const estadistico = diff / se;
+
+      let p;
+      if (cola === "derecha") {
+        p = 1 - normalCDF(estadistico);
+      } else if (cola === "izquierda") {
+        p = normalCDF(estadistico);
+      } else {
+        p = 2 * (1 - normalCDF(Math.abs(estadistico)));
+      }
+      p = Math.min(Math.max(p, 0), 1);
+
+      const zcrit = getCriticalZ(alpha, "dos").zCritPos;
+      const seIC = Math.sqrt((p1 * (1 - p1)) / n1 + (p2 * (1 - p2)) / n2);
+      const margen = zcrit * seIC;
+      const li = diff - margen;
+      const ls = diff + margen;
+
+      document.getElementById("zObs").value = estadistico.toFixed(3);
+
+      const colaTexto = cola === "derecha" ? "derecha" : (cola === "izquierda" ? "izquierda" : "dos colas");
+      const conclusion = p <= alpha
+        ? `<span style='color:#c53030'><strong>Rechazamos H₀</strong></span> (p = ${p.toFixed(4)} ≤ α = ${alpha})`
+        : `<span style='color:#2b6cb0'><strong>No rechazamos H₀</strong></span> (p = ${p.toFixed(4)} &gt; α = ${alpha})`;
+
+      document.getElementById("zcalc").innerHTML =
+        `Estadístico Z calculado: <strong>${estadistico.toFixed(3)}</strong>`;
+
+      if (diffMedias) {
+        diffMedias.innerHTML = `Proporciones muestrales: p₁ = <strong>${p1.toFixed(4)}</strong>, p₂ = <strong>${p2.toFixed(4)}</strong>`;
+      }
+
+      if (phatText) {
+        phatText.innerHTML = `Diferencia p₁ − p₂: <strong>${diff.toFixed(4)}</strong>`;
+      }
+
+      document.getElementById("pvalor").innerHTML =
+        `p-valor (${colaTexto}): <strong>${p.toFixed(4)}</strong>`;
+
+      document.getElementById("decision").innerHTML =
+        `Decisión: ${conclusion}`;
+
+      document.getElementById("ic").innerHTML =
+        `IC ${(1 - alpha) * 100}% para p₁ − p₂: <strong>[${li.toFixed(4)}, ${ls.toFixed(4)}]</strong>`;
+
+      dibujar();
+    }
+
     function calcularZDiferencia() {
       const phatText = document.getElementById("phat");
       const advertencia = document.getElementById("advertencia");
@@ -1057,10 +1201,110 @@
       dibujar();
     }
 
+    function calcularTDiferencia() {
+      const phatText = document.getElementById("phat");
+      const advertencia = document.getElementById("advertencia");
+      const diffMedias = document.getElementById("diffMedias");
+      if (phatText) phatText.textContent = "";
+      if (advertencia) advertencia.textContent = "";
+      if (diffMedias) diffMedias.textContent = "";
+
+      const xbar1 = parseFloat(document.getElementById("xbar1").value);
+      const xbar2 = parseFloat(document.getElementById("xbar2").value);
+      const s1 = parseFloat(document.getElementById("s1").value);
+      const s2 = parseFloat(document.getElementById("s2").value);
+      const n1Input = parseFloat(document.getElementById("n1").value);
+      const n2Input = parseFloat(document.getElementById("n2").value);
+      const alpha = parseFloat(document.getElementById("alpha").value);
+      const cola = document.querySelector('input[name="cola"]:checked').value;
+      const delta0 = 0;
+
+      if ([xbar1, xbar2, s1, s2, n1Input, n2Input, alpha].some(v => isNaN(v))) {
+        alert("Completá todos los valores numéricos.");
+        return;
+      }
+
+      if (!Number.isInteger(n1Input) || !Number.isInteger(n2Input)) {
+        alert("n₁ y n₂ deben ser enteros.");
+        return;
+      }
+      const n1 = n1Input;
+      const n2 = n2Input;
+      if (n1 <= 1 || n2 <= 1) {
+        alert("Para este test se requiere que n₁ y n₂ sean mayores a 1.");
+        return;
+      }
+      if (s1 <= 0 || s2 <= 0) {
+        alert("s₁ y s₂ deben ser mayores a cero.");
+        return;
+      }
+
+      const v1 = (s1 * s1) / n1;
+      const v2 = (s2 * s2) / n2;
+      const se = Math.sqrt(v1 + v2);
+      if (!isFinite(se) || se <= 0) {
+        alert("La desviación estándar combinada no es válida para estos valores.");
+        return;
+      }
+
+      const dfDenom = (Math.pow(v1, 2) / (n1 - 1)) + (Math.pow(v2, 2) / (n2 - 1));
+      let df = dfDenom > 0 ? Math.pow(v1 + v2, 2) / dfDenom : 1;
+      if (!isFinite(df) || df <= 0) {
+        df = 1;
+      }
+
+      const diff = xbar1 - xbar2;
+      const estadistico = (diff - delta0) / se;
+
+      let p;
+      if (cola === "derecha") {
+        p = 1 - tCDF(estadistico, df);
+      } else if (cola === "izquierda") {
+        p = tCDF(estadistico, df);
+      } else {
+        p = 2 * (1 - tCDF(Math.abs(estadistico), df));
+      }
+      p = Math.min(Math.max(p, 0), 1);
+
+      const tcrit = tInv(1 - alpha / 2, df);
+      const margen = tcrit * se;
+      const li = diff - margen;
+      const ls = diff + margen;
+
+      document.getElementById("zObs").value = estadistico.toFixed(3);
+
+      const colaTexto = cola === "derecha" ? "derecha" : (cola === "izquierda" ? "izquierda" : "dos colas");
+      const conclusion = p <= alpha
+        ? `<span style='color:#c53030'><strong>Rechazamos H₀</strong></span> (p = ${p.toFixed(4)} ≤ α = ${alpha})`
+        : `<span style='color:#2b6cb0'><strong>No rechazamos H₀</strong></span> (p = ${p.toFixed(4)} &gt; α = ${alpha})`;
+
+      document.getElementById("zcalc").innerHTML =
+        `Estadístico t calculado: <strong>${estadistico.toFixed(3)}</strong>`;
+
+      if (diffMedias) {
+        diffMedias.innerHTML = `Diferencia observada (X̄₁ − X̄₂): <strong>${diff.toFixed(3)}</strong>`;
+      }
+
+      document.getElementById("pvalor").innerHTML =
+        `p-valor (${colaTexto}): <strong>${p.toFixed(4)}</strong>`;
+
+      document.getElementById("decision").innerHTML =
+        `Decisión: ${conclusion}`;
+
+      document.getElementById("ic").innerHTML =
+        `IC ${(1 - alpha) * 100}% para μ₁ − μ₂: <strong>[${li.toFixed(3)}, ${ls.toFixed(3)}]</strong>`;
+
+      dibujar();
+    }
+
     function calcularTest() {
       const tipo = document.getElementById("tipoTest").value;
       if (tipo === "proporciones") {
         calcularProporciones();
+      } else if (tipo === "prop_diff") {
+        calcularProporcionesDiferencia();
+      } else if (tipo === "t_diff") {
+        calcularTDiferencia();
       } else if (tipo === "z_diff") {
         calcularZDiferencia();
       } else {
@@ -1084,6 +1328,10 @@
       const xbar2Group = document.getElementById("xbar2Group");
       const sigma1Group = document.getElementById("sigma1Group");
       const sigma2Group = document.getElementById("sigma2Group");
+      const s1Group = document.getElementById("s1Group");
+      const s2Group = document.getElementById("s2Group");
+      const x1Group = document.getElementById("x1Group");
+      const x2Group = document.getElementById("x2Group");
       const n1Group = document.getElementById("n1Group");
       const n2Group = document.getElementById("n2Group");
       const heading = document.getElementById("testHeading");
@@ -1100,7 +1348,7 @@
       const advertencia = document.getElementById("advertencia");
       const diffMedias = document.getElementById("diffMedias");
 
-      if (!tipoSelect || !zContent || !placeholder || !sigmaGroup || !sGroup || !nGroup || !xbarGroup || !mu0Group || !xGroup || !nPropGroup || !p0Group || !xbar1Group || !xbar2Group || !sigma1Group || !sigma2Group || !n1Group || !n2Group || !heading || !intro || !statLabel || !legendLabel || !btnCalcular || !curveLegend || !colaRadioGroup) {
+      if (!tipoSelect || !zContent || !placeholder || !sigmaGroup || !sGroup || !nGroup || !xbarGroup || !mu0Group || !xGroup || !nPropGroup || !p0Group || !xbar1Group || !xbar2Group || !sigma1Group || !sigma2Group || !s1Group || !s2Group || !x1Group || !x2Group || !n1Group || !n2Group || !heading || !intro || !statLabel || !legendLabel || !btnCalcular || !curveLegend || !colaRadioGroup) {
         return;
       }
 
@@ -1121,6 +1369,10 @@
       xbar2Group.classList.add("hidden");
       sigma1Group.classList.add("hidden");
       sigma2Group.classList.add("hidden");
+      s1Group.classList.add("hidden");
+      s2Group.classList.add("hidden");
+      x1Group.classList.add("hidden");
+      x2Group.classList.add("hidden");
       n1Group.classList.add("hidden");
       n2Group.classList.add("hidden");
       colaRadioGroup.classList.remove("hidden");
@@ -1187,6 +1439,10 @@
         xbar2Group.classList.remove("hidden");
         n2Group.classList.remove("hidden");
         sigma2Group.classList.remove("hidden");
+        s1Group.classList.add("hidden");
+        s2Group.classList.add("hidden");
+        x1Group.classList.add("hidden");
+        x2Group.classList.add("hidden");
         heading.textContent = "Test Z: diferencia de medias (σ₁ y σ₂ conocidas)";
         intro.innerHTML = "Se muestra la distribución normal estándar N(0,1), la región de rechazo según α y tipo de cola,<br>y la posición del estadístico observado <strong>z</strong> asociado a μ₁ − μ₂.";
         statLabel.textContent = "Estadístico observado z";
@@ -1201,9 +1457,293 @@
         if (phatText) phatText.textContent = "";
         if (advertencia) advertencia.textContent = "";
         if (diffMedias) diffMedias.textContent = "";
+      } else if (tipo === "t_diff") {
+        colaRadioGroup.classList.remove("hidden");
+        xbar1Group.classList.remove("hidden");
+        n1Group.classList.remove("hidden");
+        s1Group.classList.remove("hidden");
+        xbar2Group.classList.remove("hidden");
+        n2Group.classList.remove("hidden");
+        s2Group.classList.remove("hidden");
+        sigma1Group.classList.add("hidden");
+        sigma2Group.classList.add("hidden");
+        x1Group.classList.add("hidden");
+        x2Group.classList.add("hidden");
+        heading.textContent = "Test t: diferencia de medias (σ₁ y σ₂ desconocidas)";
+        intro.innerHTML = "Se muestra la distribución t de Student con gl de Welch, la región de rechazo según α y tipo de cola,<br>y la posición del estadístico observado <strong>t</strong> asociado a μ₁ − μ₂.";
+        statLabel.textContent = "Estadístico observado t";
+        legendLabel.textContent = "t observado";
+        btnCalcular.textContent = "Calcular t";
+        curveLegend.textContent = "Curva: densidad de la t de Student.";
+        if (colaDerechaText && colaIzquierdaText && colaDosText) {
+          colaDerechaText.innerHTML = "Cola derecha (H₁: μ₁ − μ₂ &gt; Δ₀)";
+          colaIzquierdaText.innerHTML = "Cola izquierda (H₁: μ₁ − μ₂ &lt; Δ₀)";
+          colaDosText.innerHTML = "Dos colas (H₁: μ₁ − μ₂ ≠ Δ₀)";
+        }
+        if (phatText) phatText.textContent = "";
+        if (advertencia) advertencia.textContent = "";
+        if (diffMedias) diffMedias.textContent = "";
+      } else if (tipo === "prop_diff") {
+        colaRadioGroup.classList.remove("hidden");
+        x1Group.classList.remove("hidden");
+        n1Group.classList.remove("hidden");
+        x2Group.classList.remove("hidden");
+        n2Group.classList.remove("hidden");
+        heading.textContent = "Test Z: diferencia de proporciones";
+        intro.innerHTML = "Se muestra la distribución normal estándar N(0,1), la región de rechazo según α y tipo de cola,<br>y la posición del estadístico observado <strong>z</strong> asociado a p₁ − p₂.";
+        statLabel.textContent = "Estadístico observado z";
+        legendLabel.textContent = "z observado";
+        btnCalcular.textContent = "Calcular Z";
+        curveLegend.textContent = "Curva: densidad de la normal estándar N(0,1).";
+        if (colaDerechaText && colaIzquierdaText && colaDosText) {
+          colaDerechaText.innerHTML = "Cola derecha (H₁: p₁ − p₂ &gt; 0)";
+          colaIzquierdaText.innerHTML = "Cola izquierda (H₁: p₁ − p₂ &lt; 0)";
+          colaDosText.innerHTML = "Dos colas (H₁: p₁ − p₂ ≠ 0)";
+        }
+        if (phatText) phatText.textContent = "";
+        if (advertencia) advertencia.textContent = "";
+        if (diffMedias) diffMedias.textContent = "";
       }
 
       dibujar();
+    }
+
+    function autoVerificarUI() {
+      const tipoSelect = document.getElementById("tipoTest");
+      const alphaSelect = document.getElementById("alpha");
+      const colaRadios = Array.from(document.querySelectorAll('input[name="cola"]'));
+      const zObsInput = document.getElementById("zObs");
+      const xbar1Input = document.getElementById("xbar1");
+      const xbar2Input = document.getElementById("xbar2");
+      const s1Input = document.getElementById("s1");
+      const s2Input = document.getElementById("s2");
+      const n1Input = document.getElementById("n1");
+      const n2Input = document.getElementById("n2");
+      const x1Input = document.getElementById("x1");
+      const x2Input = document.getElementById("x2");
+      const zcalcNode = document.getElementById("zcalc");
+      const diffMediasNode = document.getElementById("diffMedias");
+      const pvalorNode = document.getElementById("pvalor");
+      const decisionNode = document.getElementById("decision");
+      const icNode = document.getElementById("ic");
+      const phatNode = document.getElementById("phat");
+      const advertenciaNode = document.getElementById("advertencia");
+      const xbarInput = document.getElementById("xbar");
+      const mu0Input = document.getElementById("mu0");
+      const sigmaInput = document.getElementById("sigma");
+      const sInput = document.getElementById("s");
+      const nInput = document.getElementById("n");
+      const xInput = document.getElementById("x");
+      const nPropInput = document.getElementById("n_prop");
+      const p0Input = document.getElementById("p0");
+
+      if (!tipoSelect || !alphaSelect || !zObsInput) {
+        return { ok: false, errores: ["Elementos base no disponibles para verificación"] };
+      }
+
+      const originalState = {
+        tipo: tipoSelect.value,
+        alpha: alphaSelect.value,
+        cola: (colaRadios.find(radio => radio.checked) || {}).value || "derecha",
+        zObs: zObsInput.value,
+        xbar1: xbar1Input ? xbar1Input.value : "",
+        xbar2: xbar2Input ? xbar2Input.value : "",
+        s1: s1Input ? s1Input.value : "",
+        s2: s2Input ? s2Input.value : "",
+        n1: n1Input ? n1Input.value : "",
+        n2: n2Input ? n2Input.value : "",
+        xbar: xbarInput ? xbarInput.value : "",
+        mu0: mu0Input ? mu0Input.value : "",
+        sigma: sigmaInput ? sigmaInput.value : "",
+        s: sInput ? sInput.value : "",
+        n: nInput ? nInput.value : "",
+        x1: x1Input ? x1Input.value : "",
+        x2: x2Input ? x2Input.value : "",
+        x: xInput ? xInput.value : "",
+        nProp: nPropInput ? nPropInput.value : "",
+        p0: p0Input ? p0Input.value : "",
+        zcalc: zcalcNode ? zcalcNode.innerHTML : "",
+        diffMedias: diffMediasNode ? diffMediasNode.innerHTML : "",
+        pvalor: pvalorNode ? pvalorNode.innerHTML : "",
+        decision: decisionNode ? decisionNode.innerHTML : "",
+        ic: icNode ? icNode.innerHTML : "",
+        phat: phatNode ? phatNode.innerHTML : "",
+        advertencia: advertenciaNode ? advertenciaNode.innerHTML : ""
+      };
+
+      function seleccionarCola(valor) {
+        colaRadios.forEach(radio => {
+          radio.checked = radio.value === valor;
+        });
+      }
+
+      function restaurarEstado() {
+        tipoSelect.value = originalState.tipo;
+        actualizarTipoTest();
+        alphaSelect.value = originalState.alpha;
+        seleccionarCola(originalState.cola);
+        zObsInput.value = originalState.zObs;
+        if (xbar1Input) xbar1Input.value = originalState.xbar1;
+        if (xbar2Input) xbar2Input.value = originalState.xbar2;
+        if (s1Input) s1Input.value = originalState.s1;
+        if (s2Input) s2Input.value = originalState.s2;
+        if (n1Input) n1Input.value = originalState.n1;
+        if (n2Input) n2Input.value = originalState.n2;
+        if (xbarInput) xbarInput.value = originalState.xbar;
+        if (mu0Input) mu0Input.value = originalState.mu0;
+        if (sigmaInput) sigmaInput.value = originalState.sigma;
+        if (sInput) sInput.value = originalState.s;
+        if (nInput) nInput.value = originalState.n;
+        if (x1Input) x1Input.value = originalState.x1;
+        if (x2Input) x2Input.value = originalState.x2;
+        if (xInput) xInput.value = originalState.x;
+        if (nPropInput) nPropInput.value = originalState.nProp;
+        if (p0Input) p0Input.value = originalState.p0;
+        if (zcalcNode) zcalcNode.innerHTML = originalState.zcalc;
+        if (diffMediasNode) diffMediasNode.innerHTML = originalState.diffMedias;
+        if (pvalorNode) pvalorNode.innerHTML = originalState.pvalor;
+        if (decisionNode) decisionNode.innerHTML = originalState.decision;
+        if (icNode) icNode.innerHTML = originalState.ic;
+        if (phatNode) phatNode.innerHTML = originalState.phat;
+        if (advertenciaNode) advertenciaNode.innerHTML = originalState.advertencia;
+        dibujar();
+      }
+
+      const errores = [];
+
+      function verificarTDiferencia() {
+        const alphaOpciones = ["0.10", "0.05", "0.01"];
+        const colaOpciones = ["derecha", "izquierda", "dos"];
+        for (let i = 0; i < 5; i++) {
+          const alphaValor = alphaOpciones[Math.floor(Math.random() * alphaOpciones.length)];
+          const colaValor = colaOpciones[Math.floor(Math.random() * colaOpciones.length)];
+          alphaSelect.value = alphaValor;
+          seleccionarCola(colaValor);
+          tipoSelect.value = "t_diff";
+          actualizarTipoTest();
+
+          const n1 = Math.floor(Math.random() * 20) + 5;
+          const n2 = Math.floor(Math.random() * 20) + 5;
+          const s1 = Math.random() * 4 + 0.5;
+          const s2 = Math.random() * 4 + 0.5;
+          const xbar1 = Math.random() * 20 - 10;
+          const xbar2 = Math.random() * 20 - 10;
+
+          if (n1Input) n1Input.value = n1;
+          if (n2Input) n2Input.value = n2;
+          if (s1Input) s1Input.value = s1.toFixed(2);
+          if (s2Input) s2Input.value = s2.toFixed(2);
+          if (xbar1Input) xbar1Input.value = xbar1.toFixed(2);
+          if (xbar2Input) xbar2Input.value = xbar2.toFixed(2);
+
+          calcularTDiferencia();
+
+          const diffReal = xbar1 - xbar2;
+          const v1 = (s1 * s1) / n1;
+          const v2 = (s2 * s2) / n2;
+          const se = Math.sqrt(v1 + v2);
+          if (!isFinite(se) || se <= 0) {
+            continue;
+          }
+          const dfDenom = (Math.pow(v1, 2) / (n1 - 1)) + (Math.pow(v2, 2) / (n2 - 1));
+          const df = dfDenom > 0 ? Math.pow(v1 + v2, 2) / dfDenom : 1;
+          const tReal = (diffReal - 0) / se;
+
+          let pEsperado;
+          if (colaValor === "derecha") {
+            pEsperado = 1 - tCDF(tReal, df);
+          } else if (colaValor === "izquierda") {
+            pEsperado = tCDF(tReal, df);
+          } else {
+            pEsperado = 2 * (1 - tCDF(Math.abs(tReal), df));
+          }
+          pEsperado = Math.min(Math.max(pEsperado, 0), 1);
+
+          const tEsperado = parseFloat(tReal.toFixed(3));
+          const pEsperadoRedondeado = parseFloat(pEsperado.toFixed(4));
+          const diffEsperada = parseFloat(diffReal.toFixed(3));
+
+          const tUI = parseFloat(zObsInput.value);
+          const pStrong = pvalorNode ? pvalorNode.querySelector("strong") : null;
+          const pUI = pStrong ? parseFloat(pStrong.textContent) : NaN;
+          const diffStrong = diffMediasNode ? diffMediasNode.querySelector("strong") : null;
+          const diffUI = diffStrong ? parseFloat(diffStrong.textContent) : NaN;
+
+          if (!isFinite(tUI) || Math.abs(tUI - tEsperado) > 1e-6) {
+            errores.push(`t_diff: estadístico esperado ${tEsperado} pero la UI mostró ${tUI}`);
+          }
+          if (!isFinite(pUI) || Math.abs(pUI - pEsperadoRedondeado) > 1e-6) {
+            errores.push(`t_diff: p-valor esperado ${pEsperadoRedondeado} pero la UI mostró ${pUI}`);
+          }
+          if (diffMediasNode && (!isFinite(diffUI) || Math.abs(diffUI - diffEsperada) > 1e-6)) {
+            errores.push(`t_diff: diferencia esperada ${diffEsperada} pero la UI mostró ${diffUI}`);
+          }
+        }
+      }
+
+      function verificarProporcionesDiferencia() {
+        const alphaOpciones = ["0.10", "0.05", "0.01"];
+        const colaOpciones = ["derecha", "izquierda", "dos"];
+        for (let i = 0; i < 5; i++) {
+          const alphaValor = alphaOpciones[Math.floor(Math.random() * alphaOpciones.length)];
+          const colaValor = colaOpciones[Math.floor(Math.random() * colaOpciones.length)];
+          alphaSelect.value = alphaValor;
+          seleccionarCola(colaValor);
+          tipoSelect.value = "prop_diff";
+          actualizarTipoTest();
+
+          const n1 = Math.floor(Math.random() * 80) + 20;
+          const n2 = Math.floor(Math.random() * 80) + 20;
+          const x1 = Math.floor(Math.random() * (n1 + 1));
+          const x2 = Math.floor(Math.random() * (n2 + 1));
+
+          if (n1Input) n1Input.value = n1;
+          if (n2Input) n2Input.value = n2;
+          if (x1Input) x1Input.value = x1;
+          if (x2Input) x2Input.value = x2;
+
+          const p1 = n1 > 0 ? x1 / n1 : 0;
+          const p2 = n2 > 0 ? x2 / n2 : 0;
+          const phatComb = (x1 + x2) / (n1 + n2);
+          const se = Math.sqrt(phatComb * (1 - phatComb) * (1 / n1 + 1 / n2));
+          if (!isFinite(se) || se <= 0) {
+            continue;
+          }
+
+          calcularProporcionesDiferencia();
+          const diff = p1 - p2;
+          const zReal = diff / se;
+
+          let pEsperado;
+          if (colaValor === "derecha") {
+            pEsperado = 1 - normalCDF(zReal);
+          } else if (colaValor === "izquierda") {
+            pEsperado = normalCDF(zReal);
+          } else {
+            pEsperado = 2 * (1 - normalCDF(Math.abs(zReal)));
+          }
+          pEsperado = Math.min(Math.max(pEsperado, 0), 1);
+
+          const zEsperado = parseFloat(zReal.toFixed(3));
+          const pEsperadoRedondeado = parseFloat(pEsperado.toFixed(4));
+          const pStrong = pvalorNode ? pvalorNode.querySelector("strong") : null;
+          const pUI = pStrong ? parseFloat(pStrong.textContent) : NaN;
+          const zUI = parseFloat(zObsInput.value);
+
+          if (!isFinite(zUI) || Math.abs(zUI - zEsperado) > 1e-6) {
+            errores.push(`prop_diff: estadístico esperado ${zEsperado} pero la UI mostró ${zUI}`);
+          }
+          if (!isFinite(pUI) || Math.abs(pUI - pEsperadoRedondeado) > 1e-6) {
+            errores.push(`prop_diff: p-valor esperado ${pEsperadoRedondeado} pero la UI mostró ${pUI}`);
+          }
+        }
+      }
+
+      verificarTDiferencia();
+      verificarProporcionesDiferencia();
+      restaurarEstado();
+
+      return { ok: errores.length === 0, errores };
     }
 
     const btnDibujar = document.getElementById("btnDibujar");
@@ -1217,193 +1757,6 @@
     });
     document.getElementById("btnCalcularZ").addEventListener("click", calcularTest);
     document.getElementById("tipoTest").addEventListener("change", actualizarTipoTest);
-
-//--------------------------- Segmento Funcion Generadora de JSON para pruebas ---------------------------
-
-    // Genera un número entero aleatorio entre min y max (incluidos)
-    function randInt(min, max) {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-    }
-
-    // Genera un número real aleatorio entre min y max
-    function randFloat(min, max) {
-    return min + Math.random() * (max - min);
-    }
-
-    // Devuelve un elemento aleatorio de un array
-    function pick(arr) {
-    return arr[randInt(0, arr.length - 1)];
-    }
-
-    // Calcula p-valor para Z según tipo de cola
-    function pValorNormal(stat, cola) {
-    if (cola === "derecha") return 1 - normalCDF(stat);
-    if (cola === "izquierda") return normalCDF(stat);
-    return 2 * (1 - normalCDF(Math.abs(stat)));
-    }
-
-    // Calcula p-valor para t según tipo de cola
-    function pValorT(stat, df, cola) {
-    if (cola === "derecha") return 1 - tCDF(stat, df);
-    if (cola === "izquierda") return tCDF(stat, df);
-    return 2 * (1 - tCDF(Math.abs(stat), df));
-    }
-
-    // Genera un array de casos aleatorios con todos los datos calculados
-    function generarCasosTestHipotesis(cantidad = 300) {
-    const tipos = ["z", "t", "proporciones", "z_diff"];
-    const colas = ["derecha", "izquierda", "dos"];
-    const alphas = [0.20, 0.15, 0.10, 0.08, 0.05, 0.025, 0.02, 0.01, 0.005, 0.001];
-
-    const casos = [];
-
-    for (let i = 0; i < cantidad; i++) {
-        const tipo = pick(tipos);
-        const cola = pick(colas);
-        const alpha = pick(alphas);
-
-        let parametros = {};
-        let estadistico;
-        let pValor;
-        let IC = { li: null, ls: null };
-
-        if (tipo === "z") {
-        // Z una muestra
-        const xbar = parseFloat(randFloat(5, 50).toFixed(3));
-        const mu0 = parseFloat(randFloat(5, 50).toFixed(3));
-        const sigma = parseFloat(randFloat(1, 10).toFixed(3));
-        const n = randInt(10, 200);
-
-        const se = sigma / Math.sqrt(n);
-        estadistico = (xbar - mu0) / se;
-        pValor = pValorNormal(estadistico, cola);
-
-        const zcrit = getCriticalZ(alpha, "dos").zCritPos;
-        const margen = zcrit * se;
-        IC.li = xbar - margen;
-        IC.ls = xbar + margen;
-
-        parametros = { xbar, mu0, sigma, n };
-        } else if (tipo === "t") {
-        // t una muestra
-        const xbar = parseFloat(randFloat(5, 50).toFixed(3));
-        const mu0 = parseFloat(randFloat(5, 50).toFixed(3));
-        const s = parseFloat(randFloat(1, 10).toFixed(3));
-        const n = randInt(3, 200); // df >= 2
-
-        const se = s / Math.sqrt(n);
-        const df = n - 1;
-        estadistico = (xbar - mu0) / se;
-        pValor = pValorT(estadistico, df, cola);
-
-        const tcrit = tInv(1 - alpha / 2, df);
-        const margen = tcrit * se;
-        IC.li = xbar - margen;
-        IC.ls = xbar + margen;
-
-        parametros = { xbar, mu0, s, n };
-        } else if (tipo === "proporciones") {
-        // Proporciones una muestra
-        let n = randInt(20, 300);
-        let p0 = randFloat(0.1, 0.9);
-
-        // Forzar np0 y n(1-p0) >= 10 para buena aproximación normal
-        if (n * p0 < 10 || n * (1 - p0) < 10) {
-            n = 200;
-            p0 = 0.5;
-        }
-
-        const x = randInt(0, n);
-        const phat = x / n;
-
-        const se = Math.sqrt(p0 * (1 - p0) / n);
-        estadistico = (phat - p0) / se;
-        pValor = pValorNormal(estadistico, cola);
-
-        const zcrit = getCriticalZ(alpha, "dos").zCritPos;
-        const sePhat = Math.sqrt(phat * (1 - phat) / n);
-        let li = phat - zcrit * sePhat;
-        let ls = phat + zcrit * sePhat;
-        li = Math.max(0, li);
-        ls = Math.min(1, ls);
-        IC.li = li;
-        IC.ls = ls;
-
-        parametros = { x, n, p0: parseFloat(p0.toFixed(3)) };
-        } else if (tipo === "z_diff") {
-        // Z diferencia de medias (σ1 y σ2 conocidas)
-        const xbar1 = parseFloat(randFloat(5, 50).toFixed(3));
-        const xbar2 = parseFloat(randFloat(5, 50).toFixed(3));
-        const sigma1 = parseFloat(randFloat(1, 10).toFixed(3));
-        const sigma2 = parseFloat(randFloat(1, 10).toFixed(3));
-        const n1 = randInt(10, 200);
-        const n2 = randInt(10, 200);
-        const delta0 = 0;
-
-        const diff = xbar1 - xbar2;
-        const se = Math.sqrt((sigma1 * sigma1) / n1 + (sigma2 * sigma2) / n2);
-        estadistico = (diff - delta0) / se;
-        pValor = pValorNormal(estadistico, cola);
-
-        const zcrit = getCriticalZ(alpha, "dos").zCritPos;
-        const margen = zcrit * se;
-        IC.li = diff - margen;
-        IC.ls = diff + margen;
-
-        parametros = { xbar1, xbar2, sigma1, sigma2, n1, n2 };
-        }
-
-        // Redondeos como en la UI
-        const estadistico_redondeado = parseFloat(estadistico.toFixed(3));
-        const p_valor_clamp = Math.min(Math.max(pValor, 0), 1);
-        const p_valor_redondeado = parseFloat(p_valor_clamp.toFixed(4));
-
-        let liRed = IC.li;
-        let lsRed = IC.ls;
-
-        if (tipo === "proporciones") {
-        liRed = parseFloat(IC.li.toFixed(4));
-        lsRed = parseFloat(IC.ls.toFixed(4));
-        } else {
-        liRed = parseFloat(IC.li.toFixed(3));
-        lsRed = parseFloat(IC.ls.toFixed(3));
-        }
-
-        casos.push({
-        tipo,
-        cola,
-        alpha,
-        parametros,
-        estadistico,
-        estadistico_redondeado,
-        p_valor: pValor,
-        p_valor_redondeado,
-        IC: {
-            li: liRed,
-            ls: lsRed
-        }
-        });
-    }
-
-    return casos;
-    }
-
-    // Exporta los casos como un archivo JSON descargable
-    function exportarCasosJSON(cantidad = 300) {
-    const casos = generarCasosTestHipotesis(cantidad);
-    const blob = new Blob([JSON.stringify(casos, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "test_cases.json";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    console.log(`✅ Generado test_cases.json con ${cantidad} casos.`);
-    }
-
-//----------------------------------------------------------------------------------------------------------------
 
     window.addEventListener("load", () => {
       actualizarTipoTest();
