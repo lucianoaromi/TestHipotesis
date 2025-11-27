@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Distribución en un Test de Hipótesis (Z)</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 20px;
+      background: #f7fafc;
+      color: #1a202c;
+    }
+    h1 {
+      font-size: 1.4rem;
+      margin-bottom: 0.3rem;
+    }
+    .panel {
+      background: #ffffff;
+      padding: 16px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      max-width: 900px;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 12px;
+      align-items: center;
+    }
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      font-size: 0.9rem;
+    }
+    label {
+      font-size: 0.85rem;
+      margin-bottom: 4px;
+      color: #4a5568;
+    }
+    select, input[type="number"] {
+      padding: 4px 6px;
+      border-radius: 6px;
+      border: 1px solid #cbd5e0;
+      font-size: 0.9rem;
+    }
+    .radio-group {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      font-size: 0.85rem;
+    }
+    canvas {
+      border-radius: 12px;
+      background: #edf2f7;
+    }
+    .legend {
+      font-size: 0.8rem;
+      margin-top: 8px;
+      color: #4a5568;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      background: #e2e8f0;
+      margin-right: 4px;
+    }
+    .badge.rechazo {
+      background: #fed7d7;
+      color: #c53030;
+    }
+    .badge.zobs {
+      background: #bee3f8;
+      color: #2b6cb0;
+    }
+    .intro-text {
+      font-size: 0.9rem;
+      margin-top: 0;
+    }
+    .btn-draw {
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: none;
+      background: #2b6cb0;
+      color: white;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="panel">
+    <h1>Distribución Z en un test de hipótesis</h1>
+    <p class="intro-text">
+      Se muestra la distribución normal estándar N(0,1), la región de rechazo según α y tipo de cola,
+      y la posición del estadístico observado <strong>z</strong>.
+    </p>
+
+    <div class="controls">
+      <div class="control-group">
+        <label for="alpha">Nivel de significancia α</label>
+        <select id="alpha">
+        <option value="0.20">α = 0.20</option>
+        <option value="0.15">α = 0.15</option>
+        <option value="0.10">α = 0.10</option>
+        <option value="0.08">α = 0.08</option>
+        <option value="0.05" selected>α = 0.05</option>
+        <option value="0.025">α = 0.025</option>
+        <option value="0.02">α = 0.02</option>
+        <option value="0.01">α = 0.01</option>
+        <option value="0.005">α = 0.005</option>
+        <option value="0.001">α = 0.001</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label>Tipo de test</label>
+        <div class="radio-group">
+          <label><input type="radio" name="cola" value="derecha" checked> Cola derecha (H₁: μ &gt; μ₀)</label>
+          <label><input type="radio" name="cola" value="izquierda"> Cola izquierda (H₁: μ &lt; μ₀)</label>
+          <label><input type="radio" name="cola" value="dos"> Dos colas (H₁: μ ≠ μ₀)</label>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label for="zObs">Estadístico observado z</label>
+        <input type="number" id="zObs" value="1.8" step="0.1" min="-5" max="5">
+      </div>
+
+      <div class="control-group">
+        <label>&nbsp;</label>
+        <button id="btnDibujar" class="btn-draw">Actualizar gráfico</button>
+      </div>
+    </div>
+
+    <canvas id="grafico" width="800" height="350"></canvas>
+
+    <div class="legend">
+      <span class="badge rechazo">Región de rechazo</span>
+      <span class="badge zobs">z observado</span>
+      &nbsp;Curva: densidad de la normal estándar N(0,1).
+    </div>
+  </div>
+
+  <script>
+    // Función de densidad de la normal estándar
+    function normalPDF(x) {
+      return (1 / Math.sqrt(2 * Math.PI)) * Math.exp(-0.5 * x * x);
+    }
+
+// Aproximación de Acklam para la inversa de la CDF normal estándar
+function normInv(p) {
+  const a1 = -39.6968302866538,
+        a2 = 220.946098424521,
+        a3 = -275.928510446969,
+        a4 = 138.357751867269,
+        a5 = -30.6647980661472,
+        a6 = 2.50662827745924;
+
+  const b1 = -54.4760987982241,
+        b2 = 161.585836858041,
+        b3 = -155.698979859887,
+        b4 = 66.8013118877197,
+        b5 = -13.2806815528857;
+
+  const c1 = -0.00778489400243029,
+        c2 = -0.322396458041136,
+        c3 = -2.40075827716184,
+        c4 = -2.54973253934373,
+        c5 = 4.37466414146497,
+        c6 = 2.93816398269878;
+
+  const d1 = 0.00778469570904146,
+        d2 = 0.32246712907004,
+        d3 = 2.445134137143,
+        d4 = 3.75440866190742;
+
+  const plow = 0.02425;
+  const phigh = 1 - plow;
+  let q, r;
+
+  if (p < plow) {
+    q = Math.sqrt(-2 * Math.log(p));
+    return (((((c1*q+c2)*q+c3)*q+c4)*q+c5)*q+c6) /
+           ((((d1*q+d2)*q+d3)*q+d4)*q+1);
+  }
+  if (p > phigh) {
+    q = Math.sqrt(-2 * Math.log(1-p));
+    return -(((((c1*q+c2)*q+c3)*q+c4)*q+c5)*q+c6) /
+            ((((d1*q+d2)*q+d3)*q+d4)*q+1);
+  }
+
+  q = p - 0.5;
+  r = q * q;
+  return (((((a1*r+a2)*r+a3)*r+a4)*r+a5)*r+a6)*q /
+         (((((b1*r+b2)*r+b3)*r+b4)*r+b5)*r+1);
+}
+
+// Valores críticos de Z para cualquier alfa
+function getCriticalZ(alpha, cola) {
+  alpha = parseFloat(alpha);
+
+  if (cola === "derecha") {
+    return { zCritPos: normInv(1 - alpha), zCritNeg: null };
+  }
+  if (cola === "izquierda") {
+    return { zCritPos: null, zCritNeg: normInv(alpha) };
+  }
+  // Dos colas
+  return {
+    zCritPos: normInv(1 - alpha / 2),
+    zCritNeg: normInv(alpha / 2)
+  };
+}
+
+
+    function dibujar() {
+      const canvas = document.getElementById("grafico");
+      const ctx = canvas.getContext("2d");
+      const width = canvas.width;
+      const height = canvas.height;
+
+      // Rango de z
+      const zMin = -4;
+      const zMax = 4;
+      const zRange = zMax - zMin;
+
+      // Altura máxima de la PDF normal estándar ~ 0.399
+      const yMax = normalPDF(0);
+
+      // Leer controles
+      const alpha = document.getElementById("alpha").value;
+      const cola = document.querySelector('input[name="cola"]:checked').value;
+      const zObs = parseFloat(document.getElementById("zObs").value);
+
+      const crit = getCriticalZ(alpha, cola);
+
+      // Funciones de transformación de coordenadas
+      function xToCanvas(z) {
+        return ((z - zMin) / zRange) * width;
+      }
+      function yToCanvas(pdf) {
+        // 0 en la base, yMax en la parte superior
+        const marginTop = 20;
+        const marginBottom = 40;
+        const usableHeight = height - marginTop - marginBottom;
+        return marginTop + (yMax - pdf) / yMax * usableHeight;
+      }
+
+      // Limpiar
+      ctx.clearRect(0, 0, width, height);
+
+      // Fondo
+      ctx.fillStyle = "#edf2f7";
+      ctx.fillRect(0, 0, width, height);
+
+      // Ejes
+      ctx.strokeStyle = "#4a5568";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      const baseY = yToCanvas(0);
+      ctx.moveTo(0, baseY);
+      ctx.lineTo(width, baseY);
+      ctx.stroke();
+
+      // Marcas en -3,-2,-1,0,1,2,3
+      ctx.fillStyle = "#4a5568";
+      ctx.font = "10px system-ui";
+      for (let z = -3; z <= 3; z++) {
+        const x = xToCanvas(z);
+        ctx.beginPath();
+        ctx.moveTo(x, baseY - 4);
+        ctx.lineTo(x, baseY + 4);
+        ctx.stroke();
+        ctx.fillText(z.toString(), x - 3, baseY + 14);
+      }
+
+      // Dibujar región de rechazo (relleno)
+      ctx.save();
+      ctx.fillStyle = "rgba(252, 129, 129, 0.5)"; // rojo clarito
+
+      ctx.beginPath();
+      // Cola derecha
+      if (crit.zCritPos !== null) {
+        let started = false;
+        for (let i = 0; i <= 400; i++) {
+          const z = zMin + (i / 400) * zRange;
+          if (z >= crit.zCritPos) {
+            const x = xToCanvas(z);
+            const y = yToCanvas(normalPDF(z));
+            if (!started) {
+              ctx.moveTo(x, baseY);
+              started = true;
+            }
+            ctx.lineTo(x, y);
+          }
+        }
+        if (started) {
+          ctx.lineTo(xToCanvas(zMax), baseY);
+          ctx.closePath();
+          ctx.fill();
+        }
+      }
+
+
+      // Cola izquierda
+      if (crit.zCritNeg !== null) {
+        const steps = 400;
+        const xCrit = xToCanvas(crit.zCritNeg);
+
+        ctx.beginPath();
+        ctx.moveTo(xCrit, baseY);
+
+        for (let i = 0; i <= steps; i++) {
+          const t = i / steps;
+          const z = crit.zCritNeg - (crit.zCritNeg - zMin) * t;
+          const x = xToCanvas(z);
+          const y = yToCanvas(normalPDF(z));
+          ctx.lineTo(x, y);
+        }
+
+        ctx.lineTo(xToCanvas(zMin), baseY);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+
+
+      ctx.restore();
+
+      // Dibujar curva normal
+      ctx.strokeStyle = "#2b6cb0";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (let i = 0; i <= 400; i++) {
+        const z = zMin + (i / 400) * zRange;
+        const x = xToCanvas(z);
+        const y = yToCanvas(normalPDF(z));
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+
+      // Dibujar línea del z observado
+      if (!isNaN(zObs) && zObs >= zMin && zObs <= zMax) {
+        const x = xToCanvas(zObs);
+        ctx.strokeStyle = "#3182ce";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x, baseY);
+        ctx.lineTo(x, yToCanvas(normalPDF(zObs)));
+        ctx.stroke();
+
+        ctx.fillStyle = "#2b6cb0";
+        ctx.font = "11px system-ui";
+        ctx.fillText("z obs = " + zObs.toFixed(2), x + 4, yToCanvas(normalPDF(zObs)) - 4);
+      }
+    }
+
+    // Eventos
+    document.getElementById("btnDibujar").addEventListener("click", dibujar);
+    document.getElementById("alpha").addEventListener("change", dibujar);
+    document.getElementById("zObs").addEventListener("change", dibujar);
+    document.querySelectorAll('input[name="cola"]').forEach(r => {
+      r.addEventListener("change", dibujar);
+    });
+
+    // Dibujar al cargar
+    window.addEventListener("load", dibujar);
+  </script>
+</body>
+</html>
