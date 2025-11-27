@@ -731,8 +731,8 @@
           </div>
 
           <div class="control-group hidden" id="sigma1Group">
-            <label for="sigma1">Desvío poblacional ( σ₁ )</label>
-            <input type="number" id="sigma1" step="0.01" value="2">
+            <label for="sigma1">Varianza poblacional ( σ₁² )</label>
+            <input type="number" id="sigma1" step="0.01" value="4">
           </div>
 
           <div class="control-group hidden" id="s1Group">
@@ -758,8 +758,8 @@
           </div>
 
           <div class="control-group hidden" id="sigma2Group">
-            <label for="sigma2">Desvío poblacional ( σ₂ )</label>
-            <input type="number" id="sigma2" step="0.01" value="2.5">
+            <label for="sigma2">Varianza poblacional ( σ₂² )</label>
+            <input type="number" id="sigma2" step="0.01" value="6.25">
           </div>
 
           <div class="control-group hidden" id="s2Group">
@@ -1647,15 +1647,15 @@
 
       const xbar1 = parseFloat(document.getElementById("xbar1").value);
       const xbar2 = parseFloat(document.getElementById("xbar2").value);
-      const sigma1 = parseFloat(document.getElementById("sigma1").value);
-      const sigma2 = parseFloat(document.getElementById("sigma2").value);
+      const var1 = parseFloat(document.getElementById("sigma1").value);
+      const var2 = parseFloat(document.getElementById("sigma2").value);
       const n1Input = parseFloat(document.getElementById("n1").value);
       const n2Input = parseFloat(document.getElementById("n2").value);
       const alpha = parseFloat(document.getElementById("alpha").value);
       const cola = document.querySelector('input[name="cola"]:checked').value;
       const delta0 = 0;
 
-      if ([xbar1, xbar2, sigma1, sigma2, n1Input, n2Input, alpha].some(v => isNaN(v))) {
+      if ([xbar1, xbar2, var1, var2, n1Input, n2Input, alpha].some(v => isNaN(v))) {
         alert("Completá todos los valores numéricos.");
         return;
       }
@@ -1670,14 +1670,14 @@
         alert("n₁ y n₂ deben ser mayores a cero.");
         return;
       }
-      if (sigma1 <= 0 || sigma2 <= 0) {
-        alert("σ₁ y σ₂ deben ser mayores a cero.");
+      if (var1 <= 0 || var2 <= 0) {
+        alert("Las varianzas σ₁² y σ₂² deben ser mayores a cero.");
         return;
       }
 
-      const se = Math.sqrt((sigma1 * sigma1) / n1 + (sigma2 * sigma2) / n2);
+      const se = Math.sqrt((var1 / n1) + (var2 / n2));
       if (!isFinite(se) || se <= 0) {
-        alert("La desviación estándar combinada no es válida para estos valores.");
+        alert("El error estándar combinado no es válido para estos valores.");
         return;
       }
 
