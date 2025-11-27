@@ -39,7 +39,8 @@
       margin-bottom: 4px;
       color: #4a5568;
     }
-    select, input[type="number"] {
+    select,
+    input[type="number"] {
       padding: 4px 6px;
       border-radius: 6px;
       border: 1px solid #cbd5e0;
@@ -89,6 +90,10 @@
       font-size: 0.9rem;
       cursor: pointer;
     }
+    .result-block {
+      margin-top: 15px;
+      font-size: 0.9rem;
+    }
   </style>
 </head>
 <body>
@@ -103,16 +108,16 @@
       <div class="control-group">
         <label for="alpha">Nivel de significancia α</label>
         <select id="alpha">
-        <option value="0.20">α = 0.20</option>
-        <option value="0.15">α = 0.15</option>
-        <option value="0.10">α = 0.10</option>
-        <option value="0.08">α = 0.08</option>
-        <option value="0.05" selected>α = 0.05</option>
-        <option value="0.025">α = 0.025</option>
-        <option value="0.02">α = 0.02</option>
-        <option value="0.01">α = 0.01</option>
-        <option value="0.005">α = 0.005</option>
-        <option value="0.001">α = 0.001</option>
+          <option value="0.20">α = 0.20</option>
+          <option value="0.15">α = 0.15</option>
+          <option value="0.10">α = 0.10</option>
+          <option value="0.08">α = 0.08</option>
+          <option value="0.05" selected>α = 0.05</option>
+          <option value="0.025">α = 0.025</option>
+          <option value="0.02">α = 0.02</option>
+          <option value="0.01">α = 0.01</option>
+          <option value="0.005">α = 0.005</option>
+          <option value="0.001">α = 0.001</option>
         </select>
       </div>
 
@@ -134,9 +139,42 @@
         <label>&nbsp;</label>
         <button id="btnDibujar" class="btn-draw">Actualizar gráfico</button>
       </div>
+
+      <div class="control-group">
+        <label for="xbar">Media muestral  X̄</label>
+        <input type="number" id="xbar" step="0.01" value="10">
+      </div>
+
+      <div class="control-group">
+        <label for="mu0">Valor hipotético μ₀</label>
+        <input type="number" id="mu0" step="0.01" value="12">
+      </div>
+
+      <div class="control-group">
+        <label for="sigma">Desvío conocido σ</label>
+        <input type="number" id="sigma" step="0.01" value="3">
+      </div>
+
+      <div class="control-group">
+        <label for="n">Tamaño muestral n</label>
+        <input type="number" id="n" step="1" value="30" min="1">
+      </div>
+
+      <div class="control-group">
+        <label>&nbsp;</label>
+        <button id="btnCalcularZ" class="btn-draw">Calcular Z</button>
+      </div>
     </div>
 
     <canvas id="grafico" width="800" height="350"></canvas>
+
+    <div id="resultados" class="result-block">
+      <strong>Resultados del test:</strong>
+      <div id="zcalc"></div>
+      <div id="pvalor"></div>
+      <div id="decision"></div>
+      <div id="ic"></div>
+    </div>
 
     <div class="legend">
       <span class="badge rechazo">Región de rechazo</span>
@@ -146,76 +184,91 @@
   </div>
 
   <script>
-    // Función de densidad de la normal estándar
     function normalPDF(x) {
       return (1 / Math.sqrt(2 * Math.PI)) * Math.exp(-0.5 * x * x);
     }
 
-// Aproximación de Acklam para la inversa de la CDF normal estándar
-function normInv(p) {
-  const a1 = -39.6968302866538,
-        a2 = 220.946098424521,
-        a3 = -275.928510446969,
-        a4 = 138.357751867269,
-        a5 = -30.6647980661472,
-        a6 = 2.50662827745924;
+    function normInv(p) {
+      const a1 = -39.6968302866538,
+            a2 = 220.946098424521,
+            a3 = -275.928510446969,
+            a4 = 138.357751867269,
+            a5 = -30.6647980661472,
+            a6 = 2.50662827745924;
 
-  const b1 = -54.4760987982241,
-        b2 = 161.585836858041,
-        b3 = -155.698979859887,
-        b4 = 66.8013118877197,
-        b5 = -13.2806815528857;
+      const b1 = -54.4760987982241,
+            b2 = 161.585836858041,
+            b3 = -155.698979859887,
+            b4 = 66.8013118877197,
+            b5 = -13.2806815528857;
 
-  const c1 = -0.00778489400243029,
-        c2 = -0.322396458041136,
-        c3 = -2.40075827716184,
-        c4 = -2.54973253934373,
-        c5 = 4.37466414146497,
-        c6 = 2.93816398269878;
+      const c1 = -0.00778489400243029,
+            c2 = -0.322396458041136,
+            c3 = -2.40075827716184,
+            c4 = -2.54973253934373,
+            c5 = 4.37466414146497,
+            c6 = 2.93816398269878;
 
-  const d1 = 0.00778469570904146,
-        d2 = 0.32246712907004,
-        d3 = 2.445134137143,
-        d4 = 3.75440866190742;
+      const d1 = 0.00778469570904146,
+            d2 = 0.32246712907004,
+            d3 = 2.445134137143,
+            d4 = 3.75440866190742;
 
-  const plow = 0.02425;
-  const phigh = 1 - plow;
-  let q, r;
+      const plow = 0.02425;
+      const phigh = 1 - plow;
+      let q, r;
 
-  if (p < plow) {
-    q = Math.sqrt(-2 * Math.log(p));
-    return (((((c1*q+c2)*q+c3)*q+c4)*q+c5)*q+c6) /
-           ((((d1*q+d2)*q+d3)*q+d4)*q+1);
-  }
-  if (p > phigh) {
-    q = Math.sqrt(-2 * Math.log(1-p));
-    return -(((((c1*q+c2)*q+c3)*q+c4)*q+c5)*q+c6) /
-            ((((d1*q+d2)*q+d3)*q+d4)*q+1);
-  }
+      if (p < plow) {
+        q = Math.sqrt(-2 * Math.log(p));
+        return (((((c1*q+c2)*q+c3)*q+c4)*q+c5)*q+c6) /
+               ((((d1*q+d2)*q+d3)*q+d4)*q+1);
+      }
+      if (p > phigh) {
+        q = Math.sqrt(-2 * Math.log(1-p));
+        return -(((((c1*q+c2)*q+c3)*q+c4)*q+c5)*q+c6) /
+                ((((d1*q+d2)*q+d3)*q+d4)*q+1);
+      }
 
-  q = p - 0.5;
-  r = q * q;
-  return (((((a1*r+a2)*r+a3)*r+a4)*r+a5)*r+a6)*q /
-         (((((b1*r+b2)*r+b3)*r+b4)*r+b5)*r+1);
-}
+      q = p - 0.5;
+      r = q * q;
+      return (((((a1*r+a2)*r+a3)*r+a4)*r+a5)*r+a6)*q /
+             (((((b1*r+b2)*r+b3)*r+b4)*r+b5)*r+1);
+    }
 
-// Valores críticos de Z para cualquier alfa
-function getCriticalZ(alpha, cola) {
-  alpha = parseFloat(alpha);
+    function normalCDF(x) {
+      return (1 + erf(x / Math.sqrt(2))) / 2;
+    }
 
-  if (cola === "derecha") {
-    return { zCritPos: normInv(1 - alpha), zCritNeg: null };
-  }
-  if (cola === "izquierda") {
-    return { zCritPos: null, zCritNeg: normInv(alpha) };
-  }
-  // Dos colas
-  return {
-    zCritPos: normInv(1 - alpha / 2),
-    zCritNeg: normInv(alpha / 2)
-  };
-}
+    function erf(x) {
+      const sign = x >= 0 ? 1 : -1;
+      x = Math.abs(x);
 
+      const a1 = 0.254829592,
+            a2 = -0.284496736,
+            a3 = 1.421413741,
+            a4 = -1.453152027,
+            a5 = 1.061405429,
+            p  = 0.3275911;
+
+      const t = 1 / (1 + p * x);
+      const y = 1 - (((((a5*t + a4)*t) + a3)*t + a2)*t + a1)*t*Math.exp(-x*x);
+      return sign * y;
+    }
+
+    function getCriticalZ(alpha, cola) {
+      alpha = parseFloat(alpha);
+
+      if (cola === "derecha") {
+        return { zCritPos: normInv(1 - alpha), zCritNeg: null };
+      }
+      if (cola === "izquierda") {
+        return { zCritPos: null, zCritNeg: normInv(alpha) };
+      }
+      return {
+        zCritPos: normInv(1 - alpha / 2),
+        zCritNeg: normInv(alpha / 2)
+      };
+    }
 
     function dibujar() {
       const canvas = document.getElementById("grafico");
@@ -223,41 +276,30 @@ function getCriticalZ(alpha, cola) {
       const width = canvas.width;
       const height = canvas.height;
 
-      // Rango de z
       const zMin = -4;
       const zMax = 4;
       const zRange = zMax - zMin;
-
-      // Altura máxima de la PDF normal estándar ~ 0.399
       const yMax = normalPDF(0);
 
-      // Leer controles
       const alpha = document.getElementById("alpha").value;
       const cola = document.querySelector('input[name="cola"]:checked').value;
       const zObs = parseFloat(document.getElementById("zObs").value);
-
       const crit = getCriticalZ(alpha, cola);
 
-      // Funciones de transformación de coordenadas
       function xToCanvas(z) {
         return ((z - zMin) / zRange) * width;
       }
       function yToCanvas(pdf) {
-        // 0 en la base, yMax en la parte superior
         const marginTop = 20;
         const marginBottom = 40;
         const usableHeight = height - marginTop - marginBottom;
         return marginTop + (yMax - pdf) / yMax * usableHeight;
       }
 
-      // Limpiar
       ctx.clearRect(0, 0, width, height);
-
-      // Fondo
       ctx.fillStyle = "#edf2f7";
       ctx.fillRect(0, 0, width, height);
 
-      // Ejes
       ctx.strokeStyle = "#4a5568";
       ctx.lineWidth = 1;
       ctx.beginPath();
@@ -266,7 +308,6 @@ function getCriticalZ(alpha, cola) {
       ctx.lineTo(width, baseY);
       ctx.stroke();
 
-      // Marcas en -3,-2,-1,0,1,2,3
       ctx.fillStyle = "#4a5568";
       ctx.font = "10px system-ui";
       for (let z = -3; z <= 3; z++) {
@@ -278,13 +319,11 @@ function getCriticalZ(alpha, cola) {
         ctx.fillText(z.toString(), x - 3, baseY + 14);
       }
 
-      // Dibujar región de rechazo (relleno)
       ctx.save();
-      ctx.fillStyle = "rgba(252, 129, 129, 0.5)"; // rojo clarito
+      ctx.fillStyle = "rgba(252, 129, 129, 0.5)";
 
-      ctx.beginPath();
-      // Cola derecha
       if (crit.zCritPos !== null) {
+        ctx.beginPath();
         let started = false;
         for (let i = 0; i <= 400; i++) {
           const z = zMin + (i / 400) * zRange;
@@ -305,8 +344,6 @@ function getCriticalZ(alpha, cola) {
         }
       }
 
-
-      // Cola izquierda
       if (crit.zCritNeg !== null) {
         const steps = 400;
         const xCrit = xToCanvas(crit.zCritNeg);
@@ -327,11 +364,8 @@ function getCriticalZ(alpha, cola) {
         ctx.fill();
       }
 
-
-
       ctx.restore();
 
-      // Dibujar curva normal
       ctx.strokeStyle = "#2b6cb0";
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -344,7 +378,6 @@ function getCriticalZ(alpha, cola) {
       }
       ctx.stroke();
 
-      // Dibujar línea del z observado
       if (!isNaN(zObs) && zObs >= zMin && zObs <= zMax) {
         const x = xToCanvas(zObs);
         ctx.strokeStyle = "#3182ce";
@@ -360,15 +393,72 @@ function getCriticalZ(alpha, cola) {
       }
     }
 
-    // Eventos
+    function calcularZ() {
+      const xbar = parseFloat(document.getElementById("xbar").value);
+      const mu0 = parseFloat(document.getElementById("mu0").value);
+      const sigma = parseFloat(document.getElementById("sigma").value);
+      const n = parseInt(document.getElementById("n").value, 10);
+
+      const alpha = parseFloat(document.getElementById("alpha").value);
+      const cola = document.querySelector('input[name="cola"]:checked').value;
+
+      if (isNaN(xbar) || isNaN(mu0) || isNaN(sigma) || isNaN(n)) {
+        alert("Completá todos los valores numéricos.");
+        return;
+      }
+
+      if (sigma <= 0 || n <= 0) {
+        alert("σ y n deben ser mayores a cero.");
+        return;
+      }
+
+      const z = (xbar - mu0) / (sigma / Math.sqrt(n));
+      document.getElementById("zObs").value = z.toFixed(3);
+
+      let p;
+      if (cola === "derecha") {
+        p = 1 - normalCDF(z);
+      } else if (cola === "izquierda") {
+        p = normalCDF(z);
+      } else {
+        p = 2 * (1 - normalCDF(Math.abs(z)));
+      }
+
+      const zcrit = getCriticalZ(alpha, "dos").zCritPos;
+      const se = sigma / Math.sqrt(n);
+      const li = xbar - zcrit * se;
+      const ls = xbar + zcrit * se;
+
+      let conclusion = "";
+      if (p <= alpha) {
+        conclusion = `<span style='color:#c53030'><strong>Rechazamos H₀</strong></span> (p = ${p.toFixed(4)} ≤ α = ${alpha})`;
+      } else {
+        conclusion = `<span style='color:#2b6cb0'><strong>No rechazamos H₀</strong></span> (p = ${p.toFixed(4)} &gt; α = ${alpha})`;
+      }
+
+      document.getElementById("zcalc").innerHTML =
+        `Estadístico Z calculado: <strong>${z.toFixed(3)}</strong>`;
+
+      document.getElementById("pvalor").innerHTML =
+        `p-valor (${cola}): <strong>${p.toFixed(4)}</strong>`;
+
+      document.getElementById("decision").innerHTML =
+        `Decisión: ${conclusion}`;
+
+      document.getElementById("ic").innerHTML =
+        `IC ${(1 - alpha) * 100}% para μ: <strong>[${li.toFixed(3)}, ${ls.toFixed(3)}]</strong>`;
+
+      dibujar();
+    }
+
     document.getElementById("btnDibujar").addEventListener("click", dibujar);
     document.getElementById("alpha").addEventListener("change", dibujar);
     document.getElementById("zObs").addEventListener("change", dibujar);
     document.querySelectorAll('input[name="cola"]').forEach(r => {
       r.addEventListener("change", dibujar);
     });
+    document.getElementById("btnCalcularZ").addEventListener("click", calcularZ);
 
-    // Dibujar al cargar
     window.addEventListener("load", dibujar);
   </script>
 </body>
