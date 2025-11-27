@@ -40,6 +40,15 @@
       top: 16px;
       left: 18px;
     }
+    .institutional-header-right {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      position: absolute;
+      top: 16px;
+      right: 18px;
+    }
     .institutional-header__logo {
       width: clamp(22px, 4vw, 45px);
       height: auto;
@@ -63,6 +72,18 @@
       font-size: clamp(0.45rem, 1vw, 0.85rem);
       color: #cbd5e1;
       margin: 0;
+    }
+    .institutional-header-right__logo {
+      width: clamp(22px, 4vw, 45px);
+      height: auto;
+    }
+    .institutional-header-right__author {
+      font-size: clamp(0.45rem, 1vw, 0.85rem);
+      color: #cbd5e1;
+      margin: 0;
+      font-weight: 300;
+      font-family: Georgia, serif;
+      font-style: italic;
     }
     .app-header__content {
       max-width: 960px;
@@ -474,7 +495,8 @@
     }
     @media (max-width: 850px) {
       .institutional-header__name,
-      .institutional-header__full-name {
+      .institutional-header__full-name,
+      .institutional-header-right {
         display: none;
       }
     }
@@ -511,6 +533,10 @@
         <p class="institutional-header__name">UNNE</p>
         <p class="institutional-header__full-name">Universidad Nacional del Nordeste</p>
       </div>
+    </div>
+    <div class="institutional-header-right">
+      <img src="logo-mio.png" alt="Logo" class="institutional-header-right__logo">
+      <p class="institutional-header-right__author">Luciano Aromi</p>
     </div>
     <div class="app-header__content">
       
