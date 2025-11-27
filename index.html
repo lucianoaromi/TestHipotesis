@@ -30,6 +30,40 @@
       padding: 16px 18px;
       text-align: center;
       box-shadow: 0 16px 32px rgba(15, 23, 42, 0.45);
+      position: relative;
+    }
+    .institutional-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      position: absolute;
+      top: 16px;
+      left: 18px;
+    }
+    .institutional-header__logo {
+      height: 70px;
+      width: auto;
+      border-radius: 10px;
+    }
+    .institutional-header__text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      align-items: flex-start;
+    }
+    .institutional-header__name {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #f8fafc;
+      margin: 0;
+      letter-spacing: 0.5px;
+      transform: scaleY(1.5);
+      transform-origin: left center;
+    }
+    .institutional-header__full-name {
+      font-size: 0.85rem;
+      color: #cbd5e1;
+      margin: 0;
     }
     .app-header__content {
       max-width: 960px;
@@ -461,6 +495,13 @@
 </head>
 <body>
   <header class="app-header">
+    <div class="institutional-header">
+      <img src="logo.png" alt="Logo UNNE" class="institutional-header__logo">
+      <div class="institutional-header__text">
+        <p class="institutional-header__name">UNNE</p>
+        <p class="institutional-header__full-name">Universidad Nacional del Nordeste</p>
+      </div>
+    </div>
     <div class="app-header__content">
       
       <div>
