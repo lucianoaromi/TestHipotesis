@@ -159,8 +159,8 @@
     }
     #tipoTest {
       min-width: 400px;
-      width: fit-content;
-      max-width: 100%;
+      width: 100%;
+      max-width: 400px;
     }
     input[type="number"] {
       -moz-appearance: textfield;
@@ -268,7 +268,7 @@
       color: #e2e8f0;
     }
     .btn-draw {
-      padding: 9px 16px;
+      padding: 12px 16px;
       border-radius: 10px;
       border: none;
       background: linear-gradient(135deg, #3182ce, #2b6cb0);
@@ -313,18 +313,23 @@
     }
     .control-group-action {
       grid-column: 1 / -1;
-      display: flex;
+      display: flex !important;
       flex-direction: row;
-      flex-wrap: wrap;
-      gap: 12px;
-      align-items: flex-end;
+      flex-wrap: nowrap;
+      gap: 6px;
+      align-items: center !important;
+      justify-content: center !important;
       font-size: 0.82rem;
-      background: transparent;
-      border: none;
-      box-shadow: none;
-      padding: 0 2px;
-      max-width: 680px;
+      background: #3a414d;
+      border: 1px solid rgba(15, 23, 42, 0.6);
+      box-shadow: 0 14px 32px rgba(6, 11, 25, 0.45);
+      border-radius: 12px;
+      padding: 8px 10px;
       margin: 10px auto 0;
+      margin-left: auto !important;
+      margin-right: auto !important;
+      width: 310px !important;
+      max-width: 310px !important;
     }
     .control-stack {
       display: flex;
@@ -337,6 +342,41 @@
       box-shadow: 0 14px 32px rgba(6, 11, 25, 0.45);
       color: #f1f5f9;
       min-width: 180px;
+    }
+    .control-group-action .control-stack {
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      padding: 0;
+      min-width: auto;
+      gap: 6px;
+    }
+    .control-group-action .control-stack:has(#zObs) {
+      display: flex;
+      flex-direction: column;
+      flex: 0 1 auto;
+      min-width: 0;
+      order: 1;
+      margin-right: 0;
+      margin-left: 0;
+    }
+    .control-group-action .control-stack:has(#btnCalcularZ) {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 0;
+      min-width: auto;
+      margin-left: 0;
+      order: 2;
+    }
+    #btnCalcularZ {
+      min-width: 120px;
+      margin-left: auto;
+      padding: 14px 16px;
+      min-height: 48px;
+    }
+    .control-group-action .control-stack:has(#btnCalcularZ) > label {
+      display: none;
     }
     .control-row {
       display: flex;
@@ -536,12 +576,12 @@
 
         <div class="control-group-action">
           <div class="control-stack">
-            <label>&nbsp;</label>
-            <button id="btnCalcularZ" class="btn-draw">Calcular Z</button>
-          </div>
-          <div class="control-stack">
             <label for="zObs" id="statObservedLabel">Estadístico observado z</label>
             <input type="number" id="zObs" value="1.8" step="0.1" min="-10" max="10" readonly>
+          </div>
+            <div class="control-stack">
+            <label>&nbsp;</label>
+            <button id="btnCalcularZ" class="btn-draw">Calcular Z</button>
           </div>
         </div>
       </div>
