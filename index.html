@@ -22,6 +22,28 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.06);
       max-width: 900px;
     }
+    .test-type-selector {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .test-type-selector label {
+      font-size: 0.9rem;
+      color: #2d3748;
+    }
+    .placeholder-message {
+      margin-top: 20px;
+      padding: 16px;
+      background: #fefcbf;
+      border: 1px solid #faf089;
+      border-radius: 10px;
+      color: #744210;
+      font-size: 0.95rem;
+    }
+    .hidden {
+      display: none !important;
+    }
     .controls {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -115,86 +137,97 @@
   </style>
 </head>
 <body>
+  <div class="test-type-selector">
+    <label for="tipoTest">Seleccioná el tipo de test</label>
+    <select id="tipoTest">
+      <option value="z" selected>Test Z (σ conocida)</option>
+      <option value="t">Test t de Student (σ desconocida)</option>
+      <option value="proporciones">Test de proporciones</option>
+    </select>
+  </div>
   <div class="panel">
-    <h1>Distribución Z en un test de hipótesis</h1>
-    <p class="intro-text">
-      Se muestra la distribución normal estándar N(0,1), la región de rechazo según α y tipo de cola,
-      y la posición del estadístico observado <strong>z</strong>.
-    </p>
+    <div id="testZContent">
+      <h1>Distribución Z en un test de hipótesis</h1>
+      <p class="intro-text">
+        Se muestra la distribución normal estándar N(0,1), la región de rechazo según α y tipo de cola,
+        y la posición del estadístico observado <strong>z</strong>.
+      </p>
 
-    <div class="controls">
-      <div class="control-group">
-        <label for="alpha">Nivel de significancia α</label>
-        <select id="alpha">
-          <option value="0.20">α = 0.20</option>
-          <option value="0.15">α = 0.15</option>
-          <option value="0.10">α = 0.10</option>
-          <option value="0.08">α = 0.08</option>
-          <option value="0.05" selected>α = 0.05</option>
-          <option value="0.025">α = 0.025</option>
-          <option value="0.02">α = 0.02</option>
-          <option value="0.01">α = 0.01</option>
-          <option value="0.005">α = 0.005</option>
-          <option value="0.001">α = 0.001</option>
-        </select>
-      </div>
+      <div class="controls">
+        <div class="control-group">
+          <label for="alpha">Nivel de significancia α</label>
+          <select id="alpha">
+            <option value="0.20">α = 0.20</option>
+            <option value="0.15">α = 0.15</option>
+            <option value="0.10">α = 0.10</option>
+            <option value="0.08">α = 0.08</option>
+            <option value="0.05" selected>α = 0.05</option>
+            <option value="0.025">α = 0.025</option>
+            <option value="0.02">α = 0.02</option>
+            <option value="0.01">α = 0.01</option>
+            <option value="0.005">α = 0.005</option>
+            <option value="0.001">α = 0.001</option>
+          </select>
+        </div>
 
-      <div class="control-group control-group-wide">
-        <label>Tipo de test</label>
-        <div class="radio-group">
-          <label><input type="radio" name="cola" value="derecha" checked> Cola derecha (H₁: μ &gt; μ₀)</label>
-          <label><input type="radio" name="cola" value="izquierda"> Cola izquierda (H₁: μ &lt; μ₀)</label>
-          <label><input type="radio" name="cola" value="dos"> Dos colas (H₁: μ ≠ μ₀)</label>
+        <div class="control-group control-group-wide">
+          <label>Tipo de test</label>
+          <div class="radio-group">
+            <label><input type="radio" name="cola" value="derecha" checked> Cola derecha (H₁: μ &gt; μ₀)</label>
+            <label><input type="radio" name="cola" value="izquierda"> Cola izquierda (H₁: μ &lt; μ₀)</label>
+            <label><input type="radio" name="cola" value="dos"> Dos colas (H₁: μ ≠ μ₀)</label>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label for="xbar">Media muestral  X̄</label>
+          <input type="number" id="xbar" step="0.01" value="10">
+        </div>
+
+        <div class="control-group">
+          <label for="mu0">Valor hipotético μ₀</label>
+          <input type="number" id="mu0" step="0.01" value="12">
+        </div>
+
+        <div class="control-group">
+          <label for="sigma">Desvío conocido σ</label>
+          <input type="number" id="sigma" step="0.01" value="3">
+        </div>
+
+        <div class="control-group">
+          <label for="n">Tamaño muestral n</label>
+          <input type="number" id="n" step="1" value="30" min="1">
+        </div>
+
+        <div class="control-group-action">
+          <div class="control-stack">
+            <label>&nbsp;</label>
+            <button id="btnCalcularZ" class="btn-draw">Calcular Z</button>
+          </div>
+          <div class="control-stack">
+            <label for="zObs">Estadístico observado z</label>
+            <input type="number" id="zObs" value="1.8" step="0.1" min="-5" max="5">
+          </div>
         </div>
       </div>
 
-      <div class="control-group">
-        <label for="xbar">Media muestral  X̄</label>
-        <input type="number" id="xbar" step="0.01" value="10">
+      <canvas id="grafico" width="800" height="350"></canvas>
+
+      <div id="resultados" class="result-block">
+        <strong>Resultados del test:</strong>
+        <div id="zcalc"></div>
+        <div id="pvalor"></div>
+        <div id="decision"></div>
+        <div id="ic"></div>
       </div>
 
-      <div class="control-group">
-        <label for="mu0">Valor hipotético μ₀</label>
-        <input type="number" id="mu0" step="0.01" value="12">
-      </div>
-
-      <div class="control-group">
-        <label for="sigma">Desvío conocido σ</label>
-        <input type="number" id="sigma" step="0.01" value="3">
-      </div>
-
-      <div class="control-group">
-        <label for="n">Tamaño muestral n</label>
-        <input type="number" id="n" step="1" value="30" min="1">
-      </div>
-
-      <div class="control-group-action">
-        <div class="control-stack">
-          <label>&nbsp;</label>
-          <button id="btnCalcularZ" class="btn-draw">Calcular Z</button>
-        </div>
-        <div class="control-stack">
-          <label for="zObs">Estadístico observado z</label>
-          <input type="number" id="zObs" value="1.8" step="0.1" min="-5" max="5">
-        </div>
+      <div class="legend">
+        <span class="badge rechazo">Región de rechazo</span>
+        <span class="badge zobs">z observado</span>
+        &nbsp;Curva: densidad de la normal estándar N(0,1).
       </div>
     </div>
-
-    <canvas id="grafico" width="800" height="350"></canvas>
-
-    <div id="resultados" class="result-block">
-      <strong>Resultados del test:</strong>
-      <div id="zcalc"></div>
-      <div id="pvalor"></div>
-      <div id="decision"></div>
-      <div id="ic"></div>
-    </div>
-
-    <div class="legend">
-      <span class="badge rechazo">Región de rechazo</span>
-      <span class="badge zobs">z observado</span>
-      &nbsp;Curva: densidad de la normal estándar N(0,1).
-    </div>
+    <div id="placeholderMessage" class="placeholder-message hidden"></div>
   </div>
 
   <script>
@@ -561,6 +594,35 @@
       dibujar();
     }
 
+    function actualizarTipoTest() {
+      const tipoSelect = document.getElementById("tipoTest");
+      const zContent = document.getElementById("testZContent");
+      const placeholder = document.getElementById("placeholderMessage");
+
+      if (!tipoSelect || !zContent || !placeholder) {
+        return;
+      }
+
+      const tipo = tipoSelect.value;
+
+      if (tipo === "z") {
+        zContent.classList.remove("hidden");
+        placeholder.classList.add("hidden");
+        placeholder.textContent = "";
+        dibujar();
+      } else {
+        let mensaje = "";
+        if (tipo === "t") {
+          mensaje = "El test t-Student aún no está implementado.";
+        } else {
+          mensaje = "El test de proporciones aún no está implementado.";
+        }
+        placeholder.textContent = mensaje;
+        zContent.classList.add("hidden");
+        placeholder.classList.remove("hidden");
+      }
+    }
+
     const btnDibujar = document.getElementById("btnDibujar");
     if (btnDibujar) {
       btnDibujar.addEventListener("click", dibujar);
@@ -571,8 +633,11 @@
       r.addEventListener("change", dibujar);
     });
     document.getElementById("btnCalcularZ").addEventListener("click", calcularZ);
+    document.getElementById("tipoTest").addEventListener("change", actualizarTipoTest);
 
-    window.addEventListener("load", dibujar);
+    window.addEventListener("load", () => {
+      actualizarTipoTest();
+    });
   </script>
 </body>
 </html>
