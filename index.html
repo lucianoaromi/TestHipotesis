@@ -303,6 +303,7 @@
       <div id="resultados" class="result-block">
         <strong>Resultados del test:</strong>
         <div id="zcalc"></div>
+        <div id="critico"></div>
           <div id="diffMedias"></div>
           <div id="phat"></div>
         <div id="pvalor"></div>
@@ -796,9 +797,11 @@
       const phatText = document.getElementById("phat");
       const advertencia = document.getElementById("advertencia");
       const diffMedias = document.getElementById("diffMedias");
+      const criticoText = document.getElementById("critico");
       if (phatText) phatText.textContent = "";
       if (advertencia) advertencia.textContent = "";
       if (diffMedias) diffMedias.textContent = "";
+      if (criticoText) criticoText.textContent = "";
       const tipoTest = document.getElementById("tipoTest").value;
       const xbar = parseFloat(document.getElementById("xbar").value);
       const mu0 = parseFloat(document.getElementById("mu0").value);
@@ -822,6 +825,8 @@
       let li;
       let ls;
       let statLabel;
+      let criticoLabel = "";
+      let criticoValor = "";
 
       if (tipoTest === "t") {
         const s = parseFloat(document.getElementById("s").value);
@@ -840,6 +845,17 @@
         const df = n - 1;
         const se = s / Math.sqrt(n);
         estadistico = (xbar - mu0) / se;
+        const criticos = getCriticalT(alpha, cola, df);
+        if (cola === "dos") {
+          criticoLabel = "Valor crítico";
+          criticoValor = `[${criticos.zCritNeg.toFixed(3)} , ${criticos.zCritPos.toFixed(3)}]`;
+        } else if (cola === "derecha") {
+          criticoLabel = "Valor crítico (cola derecha)";
+          criticoValor = criticos.zCritPos.toFixed(3);
+        } else {
+          criticoLabel = "Valor crítico (cola izquierda)";
+          criticoValor = criticos.zCritNeg.toFixed(3);
+        }
         if (cola === "derecha") {
           p = 1 - tCDF(estadistico, df);
         } else if (cola === "izquierda") {
@@ -865,6 +881,17 @@
         }
         const se = sigma / Math.sqrt(n);
         estadistico = (xbar - mu0) / se;
+        const criticos = getCriticalZ(alpha, cola);
+        if (cola === "dos") {
+          criticoLabel = "Valor crítico";
+          criticoValor = `[${criticos.zCritNeg.toFixed(3)} , ${criticos.zCritPos.toFixed(3)}]`;
+        } else if (cola === "derecha") {
+          criticoLabel = "Valor crítico (cola derecha)";
+          criticoValor = criticos.zCritPos.toFixed(3);
+        } else {
+          criticoLabel = "Valor crítico (cola izquierda)";
+          criticoValor = criticos.zCritNeg.toFixed(3);
+        }
         if (cola === "derecha") {
           p = 1 - normalCDF(estadistico);
         } else if (cola === "izquierda") {
@@ -892,6 +919,10 @@
 
       document.getElementById("zcalc").innerHTML =
         `${tituloEstadistico}: <strong>${estadistico.toFixed(3)}</strong>`;
+
+      if (criticoText && criticoLabel && criticoValor !== "") {
+        criticoText.innerHTML = `${criticoLabel}: <strong>${criticoValor}</strong>`;
+      }
 
       document.getElementById("pvalor").innerHTML =
         `p-valor (${cola}): <strong>${p.toFixed(4)}</strong>`;
@@ -1009,9 +1040,11 @@
       const phatText = document.getElementById("phat");
       const advertencia = document.getElementById("advertencia");
       const diffMedias = document.getElementById("diffMedias");
+      const criticoText = document.getElementById("critico");
       if (phatText) phatText.textContent = "";
       if (advertencia) advertencia.textContent = "";
       if (diffMedias) diffMedias.textContent = "";
+      if (criticoText) criticoText.textContent = "";
 
       const x1Input = parseFloat(document.getElementById("x1").value);
       const n1Input = parseFloat(document.getElementById("n1").value);
@@ -1048,24 +1081,18 @@
         return;
       }
 
-      const totalN = n1 + n2;
-      if (totalN <= 0) {
-        alert("La suma de tamaños muestrales debe ser mayor a cero.");
-        return;
-      }
-
       const p1 = x1 / n1;
       const p2 = x2 / n2;
-      const phatComb = (x1 + x2) / totalN;
-      const se = Math.sqrt(phatComb * (1 - phatComb) * (1 / n1 + 1 / n2));
+      const diff = p1 - p2;
+      const delta0 = 0;
+      const se = Math.sqrt((p1 * (1 - p1)) / n1 + (p2 * (1 - p2)) / n2);
 
       if (!isFinite(se) || se <= 0) {
         alert("La desviación estándar combinada no es válida para estos valores.");
         return;
       }
 
-      const diff = p1 - p2;
-      const estadistico = diff / se;
+      const estadistico = (diff - delta0) / se;
 
       let p;
       if (cola === "derecha") {
@@ -1093,12 +1120,23 @@
       document.getElementById("zcalc").innerHTML =
         `Estadístico Z calculado: <strong>${estadistico.toFixed(3)}</strong>`;
 
+      const criticos = getCriticalZ(alpha, cola);
+      if (criticoText) {
+        if (cola === "dos") {
+          criticoText.innerHTML = `Valor crítico: <strong>[${criticos.zCritNeg.toFixed(3)} , ${criticos.zCritPos.toFixed(3)}]</strong>`;
+        } else if (cola === "derecha") {
+          criticoText.innerHTML = `Valor crítico (cola derecha): <strong>${criticos.zCritPos.toFixed(3)}</strong>`;
+        } else {
+          criticoText.innerHTML = `Valor crítico (cola izquierda): <strong>${criticos.zCritNeg.toFixed(3)}</strong>`;
+        }
+      }
+
       if (diffMedias) {
         diffMedias.innerHTML = `Proporciones muestrales: p₁ = <strong>${p1.toFixed(4)}</strong>, p₂ = <strong>${p2.toFixed(4)}</strong>`;
       }
 
       if (phatText) {
-        phatText.innerHTML = `Diferencia p₁ − p₂: <strong>${diff.toFixed(4)}</strong>`;
+        phatText.innerHTML = `Diferencia p₁ − p₂ observada: <strong>${diff.toFixed(4)}</strong>`;
       }
 
       document.getElementById("pvalor").innerHTML =
@@ -1117,9 +1155,11 @@
       const phatText = document.getElementById("phat");
       const advertencia = document.getElementById("advertencia");
       const diffMedias = document.getElementById("diffMedias");
+      const criticoText = document.getElementById("critico");
       if (phatText) phatText.textContent = "";
       if (advertencia) advertencia.textContent = "";
       if (diffMedias) diffMedias.textContent = "";
+      if (criticoText) criticoText.textContent = "";
 
       const xbar1 = parseFloat(document.getElementById("xbar1").value);
       const xbar2 = parseFloat(document.getElementById("xbar2").value);
@@ -1185,6 +1225,17 @@
       document.getElementById("zcalc").innerHTML =
         `Estadístico Z calculado: <strong>${estadistico.toFixed(3)}</strong>`;
 
+      const criticos = getCriticalZ(alpha, cola);
+      if (criticoText) {
+        if (cola === "dos") {
+          criticoText.innerHTML = `Valor crítico: <strong>[${criticos.zCritNeg.toFixed(3)} , ${criticos.zCritPos.toFixed(3)}]</strong>`;
+        } else if (cola === "derecha") {
+          criticoText.innerHTML = `Valor crítico (cola derecha): <strong>${criticos.zCritPos.toFixed(3)}</strong>`;
+        } else {
+          criticoText.innerHTML = `Valor crítico (cola izquierda): <strong>${criticos.zCritNeg.toFixed(3)}</strong>`;
+        }
+      }
+
       if (diffMedias) {
         diffMedias.innerHTML = `Diferencia observada (X̄₁ − X̄₂): <strong>${diff.toFixed(3)}</strong>`;
       }
@@ -1205,9 +1256,11 @@
       const phatText = document.getElementById("phat");
       const advertencia = document.getElementById("advertencia");
       const diffMedias = document.getElementById("diffMedias");
+      const criticoText = document.getElementById("critico");
       if (phatText) phatText.textContent = "";
       if (advertencia) advertencia.textContent = "";
       if (diffMedias) diffMedias.textContent = "";
+      if (criticoText) criticoText.textContent = "";
 
       const xbar1 = parseFloat(document.getElementById("xbar1").value);
       const xbar2 = parseFloat(document.getElementById("xbar2").value);
@@ -1280,6 +1333,17 @@
 
       document.getElementById("zcalc").innerHTML =
         `Estadístico t calculado: <strong>${estadistico.toFixed(3)}</strong>`;
+
+      const criticos = getCriticalT(alpha, cola, df);
+      if (criticoText) {
+        if (cola === "dos") {
+          criticoText.innerHTML = `Valor crítico: <strong>[${criticos.zCritNeg.toFixed(3)} , ${criticos.zCritPos.toFixed(3)}]</strong>`;
+        } else if (cola === "derecha") {
+          criticoText.innerHTML = `Valor crítico (cola derecha): <strong>${criticos.zCritPos.toFixed(3)}</strong>`;
+        } else {
+          criticoText.innerHTML = `Valor crítico (cola izquierda): <strong>${criticos.zCritNeg.toFixed(3)}</strong>`;
+        }
+      }
 
       if (diffMedias) {
         diffMedias.innerHTML = `Diferencia observada (X̄₁ − X̄₂): <strong>${diff.toFixed(3)}</strong>`;
@@ -1528,6 +1592,7 @@
       const icNode = document.getElementById("ic");
       const phatNode = document.getElementById("phat");
       const advertenciaNode = document.getElementById("advertencia");
+      const criticoNode = document.getElementById("critico");
       const xbarInput = document.getElementById("xbar");
       const mu0Input = document.getElementById("mu0");
       const sigmaInput = document.getElementById("sigma");
@@ -1568,7 +1633,8 @@
         decision: decisionNode ? decisionNode.innerHTML : "",
         ic: icNode ? icNode.innerHTML : "",
         phat: phatNode ? phatNode.innerHTML : "",
-        advertencia: advertenciaNode ? advertenciaNode.innerHTML : ""
+        advertencia: advertenciaNode ? advertenciaNode.innerHTML : "",
+        critico: criticoNode ? criticoNode.innerHTML : ""
       };
 
       function seleccionarCola(valor) {
@@ -1606,6 +1672,7 @@
         if (icNode) icNode.innerHTML = originalState.ic;
         if (phatNode) phatNode.innerHTML = originalState.phat;
         if (advertenciaNode) advertenciaNode.innerHTML = originalState.advertencia;
+        if (criticoNode) criticoNode.innerHTML = originalState.critico;
         dibujar();
       }
 
@@ -1704,8 +1771,7 @@
 
           const p1 = n1 > 0 ? x1 / n1 : 0;
           const p2 = n2 > 0 ? x2 / n2 : 0;
-          const phatComb = (x1 + x2) / (n1 + n2);
-          const se = Math.sqrt(phatComb * (1 - phatComb) * (1 / n1 + 1 / n2));
+          const se = Math.sqrt((p1 * (1 - p1)) / n1 + (p2 * (1 - p2)) / n2);
           if (!isFinite(se) || se <= 0) {
             continue;
           }
