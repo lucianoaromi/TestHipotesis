@@ -556,7 +556,7 @@
 <body>
   <header class="app-header">
     <div class="app-header-flex" style="display: flex; align-items: center; justify-content: space-between; width: 100%; overflow-x: hidden;">
-      <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+      <div style="display: flex; align-items: center; gap: 0px; min-width: 0;">
         <svg class="institutional-header__logo" width="150" height="150" viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg">
           <path d="M40 10 L40 140 Q40 210 100 210 Q160 210 160 140 L160 10" fill="none" stroke="#ffffff" stroke-width="18" stroke-linecap="butt" stroke-linejoin="round" />
           <circle cx="100" cy="75" r="32" fill="#ffffff" />
@@ -598,13 +598,15 @@
           </g>
         </svg>
         <div class="institutional-header__text">
-          <p class="institutional-header__name">UNNE</p>
-          <p class="institutional-header__full-name">Universidad Nacional del Nordeste</p>
+          <p class="institutional-header__name" style="margin-left: -6px;">UNNE</p>
+          <p class="institutional-header__full-name" style="margin-left: -6px;">Universidad Nacional del Nordeste</p>
         </div>
       </div>
-      <div class="app-header__center" style="flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; text-align: center;">
-        <h1 class="app-header__title">Laboratorio de Tests de Hipótesis</h1>
-        <p class="app-header__subtitle">Visualizá y compará escenarios para tus análisis estadísticos.</p>
+      <div class="app-header__center" style="min-width: 0; display: flex; flex-direction: column; align-items: center; text-align: center; margin: 0 auto;">
+        <div style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; text-align: center; width: max-content;">
+          <h1 class="app-header__title">Laboratorio de Tests de Hipótesis</h1>
+          <p class="app-header__subtitle">Visualizá y compará escenarios para tus análisis estadísticos.</p>
+        </div>
       </div>
       <div class="institutional-header-right" style="min-width: 0;">
         <p class="institutional-header-right__author autor-text"><span class="institutional-header-right__author-copyright">©</span> Luciano Aromi</p>
