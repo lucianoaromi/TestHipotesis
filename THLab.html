@@ -934,76 +934,157 @@
           return { beta, potencia: 1 - beta };
         }
         function dibujarBetaZ({ canvasId, mu0, mu1, sigma, n, alpha, cola }) {
-          const canvas = document.getElementById(canvasId);
-          const ctx = canvas.getContext("2d");
-          const width = canvas.width;
-          const height = canvas.height;
-          const se = sigma / Math.sqrt(n);
-          const minX = Math.min(mu0 - 4*se, mu1 - 4*se);
-          const maxX = Math.max(mu0 + 4*se, mu1 + 4*se);
-          ctx.clearRect(0,0,width,height);
-          function xToCanvas(x) { return (x - minX) / (maxX - minX) * width; }
-          function yToCanvas(y) { return height - y * height * 0.9; }
-          function pdf0(x) { return normalPDF((x - mu0)/se) / se; }
-          function pdf1(x) { return normalPDF((x - mu1)/se) / se; }
-          const zcritRight = normInv(1 - alpha);
-          const zcritLeft = normInv(alpha);
-          const zcritTwo = normInv(1 - alpha/2);
-          let xCrit1 = null, xCrit2 = null;
-          if (cola === "derecha") { xCrit1 = mu0 + zcritRight * se; }
-          else if (cola === "izquierda") { xCrit1 = mu0 + zcritLeft * se; }
-          else { xCrit1 = mu0 + (-zcritTwo) * se; xCrit2 = mu0 + (zcritTwo) * se; }
-          // Curva H0
-          ctx.strokeStyle = "#2b6cb0"; ctx.lineWidth = 2; ctx.beginPath();
-          for (let i=0;i<500;i++){ const x = minX + (i/500)*(maxX-minX); const y = pdf0(x);
-            if (i===0) ctx.moveTo(xToCanvas(x), yToCanvas(y));
-            else ctx.lineTo(xToCanvas(x), yToCanvas(y)); }
-          ctx.stroke();
-          // Curva H1
-          ctx.strokeStyle = "#dd6b20"; ctx.lineWidth = 2; ctx.beginPath();
-          for (let i=0;i<500;i++){ const x = minX + (i/500)*(maxX-minX); const y = pdf1(x);
-            if (i===0) ctx.moveTo(xToCanvas(x), yToCanvas(y));
-            else ctx.lineTo(xToCanvas(x), yToCanvas(y)); }
-          ctx.stroke();
-          // Sombrear β
-          ctx.fillStyle = "rgba(255,140,0,0.35)";
-          function fillBeta(xStart, xEnd) {
-            ctx.beginPath();
-            ctx.moveTo(xToCanvas(xStart), yToCanvas(0));
-            for (let x=xStart; x<=xEnd; x+= (maxX-minX)/400 ){
-              ctx.lineTo(xToCanvas(x), yToCanvas(pdf1(x)));
-            }
-            ctx.lineTo(xToCanvas(xEnd), yToCanvas(0));
-            ctx.closePath();
-            ctx.fill();
-          }
-          if (cola === "derecha") { fillBeta(minX, xCrit1); }
-          else if (cola === "izquierda") { fillBeta(xCrit1, maxX); }
-          else { fillBeta(minX, xCrit1); fillBeta(xCrit2, maxX); }
-          // Sombrear α (opcional)
-          ctx.fillStyle = "rgba(255,0,0,0.25)";
-          function fillAlpha(xStart, xEnd) {
-            ctx.beginPath();
-            ctx.moveTo(xToCanvas(xStart), yToCanvas(0));
-            for (let x=xStart; x<=xEnd; x+= (maxX-minX)/400 ){
-              ctx.lineTo(xToCanvas(x), yToCanvas(pdf0(x)));
-            }
-            ctx.lineTo(xToCanvas(xEnd), yToCanvas(0));
-            ctx.closePath();
-            ctx.fill();
-          }
-          if (cola === "derecha") { fillAlpha(xCrit1, maxX); }
-          if (cola === "izquierda") { fillAlpha(minX, xCrit1); }
-          if (cola === "dos") { fillAlpha(minX, xCrit1); fillAlpha(xCrit2, maxX); }
-          // Etiquetas
-          ctx.fillStyle = "#000";
-          ctx.font = "16px sans-serif";
-          ctx.fillText("H0: µ = " + mu0, 10,20);
-          ctx.fillText("H1: µ = " + mu1, 10,40);
-          const { beta, potencia } = calcularBetaZ({ mu0, mu1, sigma, n, alpha, cola });
-          ctx.fillText("β = " + beta.toFixed(4), 10, 60);
-          ctx.fillText("Potencia = " + potencia.toFixed(4), 10, 80);
-        }
+  const canvas = document.getElementById(canvasId);
+  const ctx = canvas.getContext("2d");
+  const pixelRatio = window.devicePixelRatio || 1;
+  const displayWidth = Math.round(canvas.clientWidth || canvas.width);
+  const displayHeight = Math.round(canvas.clientHeight || canvas.height / pixelRatio);
+  const scaledWidth = Math.round(displayWidth * pixelRatio);
+  const scaledHeight = Math.round(displayHeight * pixelRatio);
+
+  if (canvas.width !== scaledWidth || canvas.height !== scaledHeight) {
+    canvas.width = scaledWidth;
+    canvas.height = scaledHeight;
+  }
+
+  ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+
+  const width = displayWidth;
+  const height = displayHeight;
+  
+  const se = sigma / Math.sqrt(n);
+  const minX = Math.min(mu0 - 4*se, mu1 - 4*se);
+  const maxX = Math.max(mu0 + 4*se, mu1 + 4*se);
+  
+  function pdf0(x) { return normalPDF((x - mu0)/se) / se; }
+  function pdf1(x) { return normalPDF((x - mu1)/se) / se; }
+  
+  const yMax = Math.max(pdf0(mu0), pdf1(mu1));
+  
+  function xToCanvas(x) { 
+    return (x - minX) / (maxX - minX) * width; 
+  }
+  
+  function yToCanvas(pdf) {
+    const marginTop = 20;
+    const marginBottom = 40;
+    const usableHeight = height - marginTop - marginBottom;
+    return marginTop + (yMax - pdf) / yMax * usableHeight;
+  }
+  
+  ctx.clearRect(0, 0, width, height);
+  ctx.fillStyle = "#edf2f7";
+  ctx.fillRect(0, 0, width, height);
+  
+  const baseY = yToCanvas(0);
+  
+  ctx.strokeStyle = "#4a5568";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(0, baseY);
+  ctx.lineTo(width, baseY);
+  ctx.stroke();
+  
+  ctx.fillStyle = "#4a5568";
+  ctx.font = "10px system-ui";
+  const tickStart = Math.ceil(minX);
+  const tickEnd = Math.floor(maxX);
+  for (let z = tickStart; z <= tickEnd; z++) {
+    const x = xToCanvas(z);
+    ctx.beginPath();
+    ctx.moveTo(x, baseY - 4);
+    ctx.lineTo(x, baseY + 4);
+    ctx.stroke();
+    ctx.fillText(z.toString(), x - 3, baseY + 14);
+  }
+  
+  const zcritRight = normInv(1 - alpha);
+  const zcritLeft = normInv(alpha);
+  const zcritTwo = normInv(1 - alpha/2);
+  let xCrit1 = null, xCrit2 = null;
+  
+  if (cola === "derecha") { 
+    xCrit1 = mu0 + zcritRight * se; 
+  } else if (cola === "izquierda") { 
+    xCrit1 = mu0 + zcritLeft * se; 
+  } else { 
+    xCrit1 = mu0 + (-zcritTwo) * se; 
+    xCrit2 = mu0 + (zcritTwo) * se; 
+  }
+  
+  ctx.strokeStyle = "#2b6cb0"; 
+  ctx.lineWidth = 2; 
+  ctx.beginPath();
+  for (let i = 0; i < 500; i++) { 
+    const x = minX + (i/500)*(maxX-minX); 
+    const y = pdf0(x);
+    if (i === 0) ctx.moveTo(xToCanvas(x), yToCanvas(y));
+    else ctx.lineTo(xToCanvas(x), yToCanvas(y)); 
+  }
+  ctx.stroke();
+  
+  ctx.strokeStyle = "#dd6b20"; 
+  ctx.lineWidth = 2; 
+  ctx.beginPath();
+  for (let i = 0; i < 500; i++) { 
+    const x = minX + (i/500)*(maxX-minX); 
+    const y = pdf1(x);
+    if (i === 0) ctx.moveTo(xToCanvas(x), yToCanvas(y));
+    else ctx.lineTo(xToCanvas(x), yToCanvas(y)); 
+  }
+  ctx.stroke();
+  
+  ctx.fillStyle = "rgba(255,140,0,0.35)";
+  function fillBeta(xStart, xEnd) {
+    ctx.beginPath();
+    ctx.moveTo(xToCanvas(xStart), baseY);
+    for (let x = xStart; x <= xEnd; x += (maxX-minX)/400) {
+      ctx.lineTo(xToCanvas(x), yToCanvas(pdf1(x)));
+    }
+    ctx.lineTo(xToCanvas(xEnd), baseY);
+    ctx.closePath();
+    ctx.fill();
+  }
+  
+  if (cola === "derecha") { 
+    fillBeta(minX, xCrit1); 
+  } else if (cola === "izquierda") { 
+    fillBeta(xCrit1, maxX); 
+  } else { 
+    fillBeta(minX, xCrit1); 
+    fillBeta(xCrit2, maxX); 
+  }
+  
+  ctx.fillStyle = "rgba(255,0,0,0.25)";
+  function fillAlpha(xStart, xEnd) {
+    ctx.beginPath();
+    ctx.moveTo(xToCanvas(xStart), baseY);
+    for (let x = xStart; x <= xEnd; x += (maxX-minX)/400) {
+      ctx.lineTo(xToCanvas(x), yToCanvas(pdf0(x)));
+    }
+    ctx.lineTo(xToCanvas(xEnd), baseY);
+    ctx.closePath();
+    ctx.fill();
+  }
+  
+  if (cola === "derecha") { 
+    fillAlpha(xCrit1, maxX); 
+  } else if (cola === "izquierda") { 
+    fillAlpha(minX, xCrit1); 
+  } else { 
+    fillAlpha(minX, xCrit1); 
+    fillAlpha(xCrit2, maxX); 
+  }
+  
+  ctx.fillStyle = "#000";
+  ctx.font = "16px sans-serif";
+  ctx.textAlign = "left";
+  ctx.fillText("H0: µ = " + mu0, 10, 20);
+  ctx.fillText("H1: µ = " + mu1, 10, 40);
+  const { beta, potencia } = calcularBetaZ({ mu0, mu1, sigma, n, alpha, cola });
+  ctx.fillText("β = " + beta.toFixed(4), 10, 60);
+  ctx.fillText("Potencia = " + potencia.toFixed(4), 10, 80);
+}
         // Función principal para la UI de β
         function calcularYdibujarBetaZ() {
           const mu0 = parseFloat(document.getElementById("mu0Beta").value);
