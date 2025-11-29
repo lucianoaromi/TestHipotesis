@@ -21,7 +21,8 @@
       box-sizing: border-box;
     }
 
-    @media (max-width: 720px) {
+    /* Tamaño minimo aceptado */
+    @media (max-width: 740px) {
       #resolution-warning {
         display: flex !important;
       }
@@ -116,7 +117,20 @@
       height: auto;
     }
     .institutional-header-right__author {
-      font-size: clamp(0.52rem, 1vw, 0.92rem);
+      font-size: clamp(0.55rem, 1vw, 0.93rem);
+      color: #cbd5e1;
+      margin: 0;
+      font-weight: 300;
+      font-family: Georgia, serif;
+      font-style: italic;
+    }
+    .institutional-header-right__version {
+      font-size: clamp(0.48rem, 0.9vw, 0.88em);
+      color: inherit;
+      font-family: inherit;
+      font-style: inherit;
+      font-weight: inherit;
+      margin: 0;
       color: #cbd5e1;
       margin: 0;
       font-weight: 300;
@@ -644,7 +658,10 @@
         </div>
       </div>
       <div class="institutional-header-right" style="min-width: 0;">
-        <p class="institutional-header-right__author autor-text"><span class="institutional-header-right__author-copyright">©</span> Luciano Aromi</p>
+        <div style="display: flex; flex-direction: column; align-items: flex-end;">
+          <p class="institutional-header-right__author autor-text" style="margin-bottom: 0;"><span class="institutional-header-right__author-copyright">©</span> Luciano Aromi</p>
+          <span class="institutional-header-right__version autor-text">v1.0 (2025)</span>
+        </div>
       </div>
     </div>
   </header>
