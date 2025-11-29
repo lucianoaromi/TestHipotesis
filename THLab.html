@@ -675,17 +675,20 @@
   </header>
   <main class="app-container">
     <div class="test-type-selector">
-      <label for="tipoTest">Seleccioná el tipo de test</label>
-      <select id="tipoTest">
-        <option value="z" selected>Test Z (σ conocida)</option>
-        <option value="t">Test t de Student (σ desconocida)</option>
-        <option value="proporciones">Test de Proporciones (una muestra)</option>
-        <option value="z_diff">Test Z: Diferencia de Medias (σ₁ y σ₂ conocidas)</option>
-        <option value="t_diff">Test t: Diferencia de Medias (σ₁ y σ₂ desconocidas)</option>
-        <option value="prop_diff">Test Z: Diferencia de Proporciones</option>
-      </select>
+      <div style="display: flex; align-items: center; gap: 14px; width: 100%;">
+        <label for="tipoTest" style="margin-bottom:0; min-width:170px;">Seleccioná el tipo de test</label>
+        <select id="tipoTest" style="flex:1 1 320px; max-width:400px;">
+          <option value="z" selected>Test Z (σ conocida)</option>
+          <option value="t">Test t de Student (σ desconocida)</option>
+          <option value="proporciones">Test de Proporciones (una muestra)</option>
+          <option value="z_diff">Test Z: Diferencia de Medias (σ₁ y σ₂ conocidas)</option>
+          <option value="t_diff">Test t: Diferencia de Medias (σ₁ y σ₂ desconocidas)</option>
+          <option value="prop_diff">Test Z: Diferencia de Proporciones</option>
+          <option value="betaZ">Error Tipo II (Z: una muestra)</option>
+        </select>
+      </div>
     </div>
-    <div class="panel">
+    <div class="panel" id="panelTestZ">
       <div id="testZContent">
       <h1 id="testHeading">Distribución Z</h1>
       <p class="intro-text" id="testIntro">
@@ -847,9 +850,199 @@
       </div>
       <div id="placeholderMessage" class="placeholder-message hidden"></div>
     </div>
+    <!-- NUEVA SECCIÓN: Error Tipo II (Z: una muestra) -->
+    <div id="betaZContent" class="panel hidden">
+      <h1>Error de Tipo II (Z: una muestra)</h1>
+      <p class="intro-text">Calculá y visualizá el error de tipo II (β) y la potencia de un test Z para una muestra, comparando las distribuciones bajo H₀ y H₁.</p>
+      <div class="controls">
+        <div class="control-group" style="min-width:185px;">
+          <label for="alphaBeta">Nivel de significancia α</label>
+          <select id="alphaBeta">
+            <option value="0.20">α = 0.20</option>
+            <option value="0.15">α = 0.15</option>
+            <option value="0.10">α = 0.10</option>
+            <option value="0.08">α = 0.08</option>
+            <option value="0.05" selected>α = 0.05</option>
+            <option value="0.025">α = 0.025</option>
+            <option value="0.02">α = 0.02</option>
+            <option value="0.01">α = 0.01</option>
+            <option value="0.005">α = 0.005</option>
+            <option value="0.001">α = 0.001</option>
+          </select>
+        </div>
+        <div class="control-group control-group-wide">
+          <label>Tipo de test</label>
+          <div class="radio-group">
+            <label><input type="radio" name="colaBeta" value="derecha" checked> <span>Cola derecha (H₁: μ₁ &gt; μ₀)</span></label>
+            <label><input type="radio" name="colaBeta" value="izquierda"> <span>Cola izquierda (H₁: μ₁ &lt; μ₀)</span></label>
+            <label><input type="radio" name="colaBeta" value="dos"> <span>Dos colas (H₁: μ₁ ≠ μ₀)</span></label>
+          </div>
+        </div>
+        <div class="control-group">
+          <label for="mu0Beta">Valor hipotético (μ₀)</label>
+          <input type="number" id="mu0Beta" step="0.01" value="12">
+        </div>
+        <div class="control-group">
+          <label for="mu1Beta">Valor bajo H₁ (μ₁)</label>
+          <input type="number" id="mu1Beta" step="0.01" value="14">
+        </div>
+        <div class="control-group">
+          <label for="sigmaBeta">Desvío conocido (σ)</label>
+          <input type="number" id="sigmaBeta" step="0.01" value="3">
+        </div>
+        <div class="control-group">
+          <label for="nBeta">Tamaño muestral (n)</label>
+          <input type="number" id="nBeta" step="1" value="30" min="1">
+        </div>
+        <div class="control-group control-group-action" style="display: flex; justify-content: center; align-items: center; height: 100%; min-height: 70px;">
+          <div style="display: flex; justify-content: center; align-items: center; width: 100%; height: 100%;">
+            <button id="btnCalcularBetaZ" class="btn-draw" style="padding:14px 20px; font-size:1rem; min-width:120px;">Calcular β y potencia</button>
+          </div>
+        </div>
+      </div>
+      <canvas id="graficoBeta" class="chart-canvas" width="640" height="350"></canvas>
+      <div class="result-block">
+        <div id="betaValor"></div>
+        <div id="potenciaValor"></div>
+      </div>
+    </div>
   </main>
 
   <script>
+        // ===================
+        // Error Tipo II (Z: una muestra) – Cálculo y gráfico
+        // ===================
+        function calcularBetaZ({ mu0, mu1, sigma, n, alpha, cola }) {
+          const se = sigma / Math.sqrt(n);
+          const zcritRight = normInv(1 - alpha);
+          const zcritLeft  = normInv(alpha);
+          const zcritTwo   = normInv(1 - alpha/2);
+          let beta;
+          if (cola === "derecha") {
+            const xcrit = mu0 + zcritRight * se;
+            beta = normalCDF((xcrit - mu1) / se);
+          } else if (cola === "izquierda") {
+            const xcrit = mu0 + zcritLeft * se;
+            beta = 1 - normalCDF((xcrit - mu1) / se);
+          } else {
+            const xcritDer = mu0 + zcritTwo * se;
+            const xcritIzq = mu0 + (-zcritTwo) * se;
+            const betaDer = normalCDF((xcritDer - mu1) / se);
+            const betaIzq = 1 - normalCDF((xcritIzq - mu1) / se);
+            beta = betaDer + betaIzq;
+          }
+          return { beta, potencia: 1 - beta };
+        }
+        function dibujarBetaZ({ canvasId, mu0, mu1, sigma, n, alpha, cola }) {
+          const canvas = document.getElementById(canvasId);
+          const ctx = canvas.getContext("2d");
+          const width = canvas.width;
+          const height = canvas.height;
+          const se = sigma / Math.sqrt(n);
+          const minX = Math.min(mu0 - 4*se, mu1 - 4*se);
+          const maxX = Math.max(mu0 + 4*se, mu1 + 4*se);
+          ctx.clearRect(0,0,width,height);
+          function xToCanvas(x) { return (x - minX) / (maxX - minX) * width; }
+          function yToCanvas(y) { return height - y * height * 0.9; }
+          function pdf0(x) { return normalPDF((x - mu0)/se) / se; }
+          function pdf1(x) { return normalPDF((x - mu1)/se) / se; }
+          const zcritRight = normInv(1 - alpha);
+          const zcritLeft = normInv(alpha);
+          const zcritTwo = normInv(1 - alpha/2);
+          let xCrit1 = null, xCrit2 = null;
+          if (cola === "derecha") { xCrit1 = mu0 + zcritRight * se; }
+          else if (cola === "izquierda") { xCrit1 = mu0 + zcritLeft * se; }
+          else { xCrit1 = mu0 + (-zcritTwo) * se; xCrit2 = mu0 + (zcritTwo) * se; }
+          // Curva H0
+          ctx.strokeStyle = "#2b6cb0"; ctx.lineWidth = 2; ctx.beginPath();
+          for (let i=0;i<500;i++){ const x = minX + (i/500)*(maxX-minX); const y = pdf0(x);
+            if (i===0) ctx.moveTo(xToCanvas(x), yToCanvas(y));
+            else ctx.lineTo(xToCanvas(x), yToCanvas(y)); }
+          ctx.stroke();
+          // Curva H1
+          ctx.strokeStyle = "#dd6b20"; ctx.lineWidth = 2; ctx.beginPath();
+          for (let i=0;i<500;i++){ const x = minX + (i/500)*(maxX-minX); const y = pdf1(x);
+            if (i===0) ctx.moveTo(xToCanvas(x), yToCanvas(y));
+            else ctx.lineTo(xToCanvas(x), yToCanvas(y)); }
+          ctx.stroke();
+          // Sombrear β
+          ctx.fillStyle = "rgba(255,140,0,0.35)";
+          function fillBeta(xStart, xEnd) {
+            ctx.beginPath();
+            ctx.moveTo(xToCanvas(xStart), yToCanvas(0));
+            for (let x=xStart; x<=xEnd; x+= (maxX-minX)/400 ){
+              ctx.lineTo(xToCanvas(x), yToCanvas(pdf1(x)));
+            }
+            ctx.lineTo(xToCanvas(xEnd), yToCanvas(0));
+            ctx.closePath();
+            ctx.fill();
+          }
+          if (cola === "derecha") { fillBeta(minX, xCrit1); }
+          else if (cola === "izquierda") { fillBeta(xCrit1, maxX); }
+          else { fillBeta(minX, xCrit1); fillBeta(xCrit2, maxX); }
+          // Sombrear α (opcional)
+          ctx.fillStyle = "rgba(255,0,0,0.25)";
+          function fillAlpha(xStart, xEnd) {
+            ctx.beginPath();
+            ctx.moveTo(xToCanvas(xStart), yToCanvas(0));
+            for (let x=xStart; x<=xEnd; x+= (maxX-minX)/400 ){
+              ctx.lineTo(xToCanvas(x), yToCanvas(pdf0(x)));
+            }
+            ctx.lineTo(xToCanvas(xEnd), yToCanvas(0));
+            ctx.closePath();
+            ctx.fill();
+          }
+          if (cola === "derecha") { fillAlpha(xCrit1, maxX); }
+          if (cola === "izquierda") { fillAlpha(minX, xCrit1); }
+          if (cola === "dos") { fillAlpha(minX, xCrit1); fillAlpha(xCrit2, maxX); }
+          // Etiquetas
+          ctx.fillStyle = "#000";
+          ctx.font = "16px sans-serif";
+          ctx.fillText("H0: µ = " + mu0, 10,20);
+          ctx.fillText("H1: µ = " + mu1, 10,40);
+          const { beta, potencia } = calcularBetaZ({ mu0, mu1, sigma, n, alpha, cola });
+          ctx.fillText("β = " + beta.toFixed(4), 10, 60);
+          ctx.fillText("Potencia = " + potencia.toFixed(4), 10, 80);
+        }
+        // Función principal para la UI de β
+        function calcularYdibujarBetaZ() {
+          const mu0 = parseFloat(document.getElementById("mu0Beta").value);
+          const mu1 = parseFloat(document.getElementById("mu1Beta").value);
+          const sigma = parseFloat(document.getElementById("sigmaBeta").value);
+          const n = parseInt(document.getElementById("nBeta").value, 10);
+          const alpha = parseFloat(document.getElementById("alphaBeta").value);
+          const cola = document.querySelector('input[name="colaBeta"]:checked').value;
+          // Validaciones
+          if (isNaN(mu0) || isNaN(mu1) || isNaN(sigma) || isNaN(n) || isNaN(alpha)) {
+            alert("Completá todos los valores numéricos.");
+            return;
+          }
+          if (n <= 0) { alert("n debe ser mayor a cero."); return; }
+          if (sigma <= 0) { alert("σ debe ser mayor a cero."); return; }
+          const { beta, potencia } = calcularBetaZ({ mu0, mu1, sigma, n, alpha, cola });
+          document.getElementById("betaValor").innerHTML = "β (Error Tipo II): <strong>" + beta.toFixed(4) + "</strong>";
+          document.getElementById("potenciaValor").innerHTML = "Potencia (1 − β): <strong>" + potencia.toFixed(4) + "</strong>";
+          dibujarBetaZ({ canvasId: "graficoBeta", mu0, mu1, sigma, n, alpha, cola });
+        }
+        // Listener para el botón de β
+        document.getElementById("btnCalcularBetaZ").addEventListener("click", calcularYdibujarBetaZ);
+        // ===================
+        // Lógica de modo de visualización
+        // ===================
+        // El modo de visualización ahora depende solo de tipoTest
+        function actualizarModoVista() {
+          const tipo = document.getElementById("tipoTest").value;
+          const testZContent = document.getElementById("testZContent");
+          const betaZContent = document.getElementById("betaZContent");
+          const panelTestZ = document.getElementById("panelTestZ");
+          if (tipo === "betaZ") {
+            if (panelTestZ) panelTestZ.classList.add("hidden");
+            betaZContent.classList.remove("hidden");
+          } else {
+            if (panelTestZ) panelTestZ.classList.remove("hidden");
+            betaZContent.classList.add("hidden");
+          }
+        }
     function normalPDF(x) {
       return (1 / Math.sqrt(2 * Math.PI)) * Math.exp(-0.5 * x * x);
     }
@@ -2351,10 +2544,14 @@
       radio.addEventListener("change", dibujar);
     });
     document.getElementById("btnCalcularZ").addEventListener("click", calcularTest);
-    document.getElementById("tipoTest").addEventListener("change", actualizarTipoTest);
+    document.getElementById("tipoTest").addEventListener("change", function() {
+      actualizarTipoTest();
+      actualizarModoVista();
+    });
 
     window.addEventListener("load", () => {
       actualizarTipoTest();
+      actualizarModoVista();
     });
   </script>
 </body>
