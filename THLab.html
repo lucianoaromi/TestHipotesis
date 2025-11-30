@@ -602,6 +602,11 @@
         display: none;
       }
     }
+
+    /* Oculta visualmente el campo 'Estadístico observado z' en la tarjeta del test Z (una muestra) */
+    .hidden-field {
+      display: none !important;
+    }
   </style>
 </head>
 <body>
@@ -817,7 +822,7 @@
         </div>
 
         <div class="control-group-action">
-          <div class="control-stack">
+          <div class="control-stack hidden-field">
             <label for="zObs" id="statObservedLabel">Estadístico observado z</label>
             <input type="number" id="zObs" value="1.8" step="0.1" min="-10" max="10" readonly>
           </div>
@@ -1481,7 +1486,7 @@
       ctx.save();
       ctx.fillStyle = "rgba(99, 179, 237, 0.35)"; // celeste
 
-      if (!isNaN(zObs)) {
+      if (!isNaN(zObs) && zObs >= zMin && zObs <= zMax) {
 
         // --- COLA DERECHA ---
         if (cola === "derecha") {
@@ -1924,14 +1929,9 @@
       document.getElementById("zcalc").innerHTML =
         `Estadístico Z calculado: <strong>${estadistico.toFixed(3)}</strong>`;
 
-      const diffMedias = document.getElementById("diffMedias");
-      if (diffMedias) {
-        diffMedias.innerHTML = `Proporciones muestrales: p₁ = <strong>${p1.toFixed(4)}</strong>, p₂ = <strong>${p2.toFixed(4)}</strong>`;
-      }
-
       const phatText = document.getElementById("phat");
       if (phatText) {
-        phatText.innerHTML = `Diferencia p₁ − p₂ observada: <strong>${diff.toFixed(4)}</strong>`;
+        phatText.innerHTML = `Proporción muestral p̂: <strong>${phat.toFixed(4)}</strong>`;
       }
 
       document.getElementById("pvalor").innerHTML =
@@ -1990,6 +1990,12 @@
       if (!isFinite(se) || se <= 0) {
         alert("El error estándar combinado no es válido para estos valores.");
         return;
+      }
+
+      const dfDenom = (Math.pow(var1 / n1, 2) / (n1 - 1)) + (Math.pow(var2 / n2, 2) / (n2 - 1));
+      let df = dfDenom > 0 ? Math.pow(var1 / n1 + var2 / n2, 2) / dfDenom : 1;
+      if (!isFinite(df) || df <= 0) {
+        df = 1;
       }
 
       const diff = xbar1 - xbar2;
