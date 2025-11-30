@@ -907,6 +907,7 @@
       <div class="result-block">
         <div id="betaValor"></div>
         <div id="potenciaValor"></div>
+        <div id="interpretacionBeta" class="intro-text" style="margin-top:8px;"></div>
       </div>
     </div>
   </main>
@@ -1117,6 +1118,9 @@ function dibujarBetaZ({ canvasId, mu0, mu1, sigma, n, alpha, cola }) {
           const { beta, potencia } = calcularBetaZ({ mu0, mu1, sigma, n, alpha, cola });
           document.getElementById("betaValor").innerHTML = "β (Error Tipo II): <strong>" + beta.toFixed(4) + "</strong>";
           document.getElementById("potenciaValor").innerHTML = "Potencia (1 − β): <strong>" + potencia.toFixed(4) + "</strong>";
+          // Interpretación breve
+          document.getElementById("interpretacionBeta").innerHTML =
+            `Interpretación: Si la media verdadera fuera μ₁ = <strong>${mu1}</strong>, la prueba no detectaría la diferencia aproximadamente β = <strong>${beta.toFixed(4)}</strong>.<br>Potencia: La prueba detectaría la diferencia en (1 − β) = <strong>${potencia.toFixed(4)}</strong> de los casos.`;
           dibujarBetaZ({ canvasId: "graficoBeta", mu0, mu1, sigma, n, alpha, cola });
         }
         // Listener para el botón de β
