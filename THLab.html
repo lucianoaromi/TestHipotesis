@@ -883,7 +883,7 @@
           <input type="number" id="mu0Beta" step="0.01" value="12">
         </div>
         <div class="control-group">
-          <label for="mu1Beta">Valor bajo H₁ (μ₁)</label>
+          <label for="mu1Beta">Valor supuesto H₁ (μ₁)</label>
           <input type="number" id="mu1Beta" step="0.01" value="14">
         </div>
         <div class="control-group">
@@ -896,7 +896,7 @@
         </div>
         <div class="control-group control-group-action" style="display: flex; justify-content: center; align-items: center; height: 100%; min-height: 70px;">
           <div style="display: flex; justify-content: center; align-items: center; width: 100%; height: 100%;">
-            <button id="btnCalcularBetaZ" class="btn-draw" style="padding:14px 20px; font-size:1rem; min-width:120px;">Calcular β y potencia</button>
+            <button id="btnCalcularBetaZ" class="btn-draw" style="padding:14px 20px; font-size:1rem; min-width:120px;">Calcular β</button>
           </div>
         </div>
       </div>
@@ -1076,14 +1076,6 @@
     fillAlpha(xCrit2, maxX); 
   }
   
-  ctx.fillStyle = "#000";
-  ctx.font = "16px sans-serif";
-  ctx.textAlign = "left";
-  ctx.fillText("H0: µ = " + mu0, 10, 20);
-  ctx.fillText("H1: µ = " + mu1, 10, 40);
-  const { beta, potencia } = calcularBetaZ({ mu0, mu1, sigma, n, alpha, cola });
-  ctx.fillText("β = " + beta.toFixed(4), 10, 60);
-  ctx.fillText("Potencia = " + potencia.toFixed(4), 10, 80);
 }
         // Función principal para la UI de β
         function calcularYdibujarBetaZ() {
