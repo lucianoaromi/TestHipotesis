@@ -936,7 +936,7 @@
           }
           return { beta, potencia: 1 - beta };
         }
-        function dibujarBetaZ({ canvasId, mu0, mu1, sigma, n, alpha, cola }) {
+function dibujarBetaZ({ canvasId, mu0, mu1, sigma, n, alpha, cola }) {
   const canvas = document.getElementById(canvasId);
   const ctx = canvas.getContext("2d");
   const pixelRatio = window.devicePixelRatio || 1;
@@ -981,24 +981,43 @@
   
   const baseY = yToCanvas(0);
   
-  ctx.strokeStyle = "#4a5568";
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(0, baseY);
-  ctx.lineTo(width, baseY);
-  ctx.stroke();
-  
+  // ---- TICKS DEL EJE X (Versión PRO, limpia y no amontonada) ----
   ctx.fillStyle = "#4a5568";
-  ctx.font = "10px system-ui";
-  const tickStart = Math.ceil(minX);
-  const tickEnd = Math.floor(maxX);
-  for (let z = tickStart; z <= tickEnd; z++) {
-    const x = xToCanvas(z);
+  ctx.font = "11px system-ui";
+
+  // Queremos entre 6 y 10 etiquetas máximo
+  const niceTickCount = 8;
+  const rawStep = (maxX - minX) / niceTickCount;
+
+  // Función para hacer "lindos" los ticks (10, 50, 100, 250, etc.)
+  function niceStep(step) {
+    const pow10 = Math.pow(10, Math.floor(Math.log10(step)));
+    const n = step / pow10;
+    if (n < 1.5) return 1 * pow10;
+    if (n < 3)   return 2 * pow10;
+    if (n < 7)   return 5 * pow10;
+    return 10 * pow10;
+  }
+
+  const tickStep = niceStep(rawStep);
+
+  // Calcular inicio y fin “lindos”
+  const tickStart = Math.ceil(minX / tickStep) * tickStep;
+  const tickEnd = Math.floor(maxX / tickStep) * tickStep;
+
+  // Dibujar ticks y etiquetas
+  for (let xTick = tickStart; xTick <= tickEnd; xTick += tickStep) {
+    const xCanvas = xToCanvas(xTick);
+
+    // Tick
     ctx.beginPath();
-    ctx.moveTo(x, baseY - 4);
-    ctx.lineTo(x, baseY + 4);
+    ctx.moveTo(xCanvas, baseY - 4);
+    ctx.lineTo(xCanvas, baseY + 4);
     ctx.stroke();
-    ctx.fillText(z.toString(), x - 3, baseY + 14);
+
+    // Etiqueta (sin decimales)
+    const label = xTick.toFixed(0);
+    ctx.fillText(label, xCanvas - ctx.measureText(label).width / 2, baseY + 16);
   }
   
   const zcritRight = normInv(1 - alpha);
