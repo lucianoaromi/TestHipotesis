@@ -1298,6 +1298,43 @@ function dibujarBetaZ({ canvasId, mu0, mu1, sigma, n, alpha, cola }) {
             betaZContent.classList.add("hidden");
           }
         }
+
+          // ===================
+          // Limpieza de resultados al cambiar de sección
+          // ===================
+          /**
+           * Limpia el área de resultados de la sección indicada.
+           * @param {string} tipoTest - El valor del selector principal (ej: 'z', 't', 'proporciones', 'z_diff', 't_diff', 'prop_diff', 'betaZ')
+           */
+          function limpiarResultadosSeccion(tipoTest) {
+            if (tipoTest === 'betaZ') {
+              // Error Tipo II: limpiar solo los resultados, no los inputs
+              const betaValor = document.getElementById('betaValor');
+              const potenciaValor = document.getElementById('potenciaValor');
+              const interpretacionBeta = document.getElementById('interpretacionBeta');
+              if (betaValor) betaValor.innerHTML = '';
+              if (potenciaValor) potenciaValor.innerHTML = '';
+              if (interpretacionBeta) interpretacionBeta.innerHTML = '';
+            } else {
+              // Otras secciones: limpiar todos los divs de resultados, dejando el título
+              const zcalc = document.getElementById('zcalc');
+              const critico = document.getElementById('critico');
+              const diffMedias = document.getElementById('diffMedias');
+              const phat = document.getElementById('phat');
+              const pvalor = document.getElementById('pvalor');
+              const decision = document.getElementById('decision');
+              const ic = document.getElementById('ic');
+              const advertencia = document.getElementById('advertencia');
+              if (zcalc) zcalc.innerHTML = '';
+              if (critico) critico.innerHTML = '';
+              if (diffMedias) diffMedias.innerHTML = '';
+              if (phat) phat.innerHTML = '';
+              if (pvalor) pvalor.innerHTML = '';
+              if (decision) decision.innerHTML = '';
+              if (ic) ic.innerHTML = '';
+              if (advertencia) advertencia.innerHTML = '';
+            }
+          }
     function normalPDF(x) {
       return (1 / Math.sqrt(2 * Math.PI)) * Math.exp(-0.5 * x * x);
     }
@@ -2869,9 +2906,12 @@ function dibujarBetaZ({ canvasId, mu0, mu1, sigma, n, alpha, cola }) {
       }
     }
 
+
     document.getElementById("tipoTest").addEventListener("change", function() {
       actualizarTipoTest();
       actualizarModoVista();
+      // Limpiar resultados de la nueva sección activa
+      limpiarResultadosSeccion(document.getElementById("tipoTest").value);
       // Inicialización automática solo la primera vez que se selecciona Error Tipo II
       if (document.getElementById("tipoTest").value === "betaZ") {
         inicializarGraficoBetaZSiCorresponde();
@@ -2881,6 +2921,8 @@ function dibujarBetaZ({ canvasId, mu0, mu1, sigma, n, alpha, cola }) {
     window.addEventListener("DOMContentLoaded", () => {
       actualizarTipoTest();
       actualizarModoVista();
+      // Limpiar resultados de la sección activa al cargar
+      limpiarResultadosSeccion(document.getElementById("tipoTest").value);
       // Si Error Tipo II es la opción por defecto, inicializar el gráfico automáticamente
       if (document.getElementById("tipoTest").value === "betaZ") {
         inicializarGraficoBetaZSiCorresponde();
