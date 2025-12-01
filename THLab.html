@@ -23,10 +23,7 @@
 
     /* Tamaño minimo aceptado */
     @media (max-width: 740px) {
-      #resolution-warning {
-        display: flex !important;
-      }
-      header, main, footer, .page-content, body > *:not(#resolution-warning) {
+      .institutional-header__text {
         display: none !important;
       }
     }
@@ -107,10 +104,22 @@
       transform: scaleY(1.5);
       transform-origin: left center;
     }
+
+    @media (min-width: 1000px) {
+      .institutional-header__name {
+        font-size: 1.5rem !important;
+      }
+    }
     .institutional-header__full-name {
-      font-size: clamp(0.45rem, 1vw, 0.85rem);
+      font-size: clamp(0.45rem, 1vw, 0.65rem);
       color: #cbd5e1;
       margin: 0;
+    }
+
+    @media (min-width: 1000px) {
+      .institutional-header__full-name {
+        font-size: 0.62rem !important;
+      }
     }
     .institutional-header-right__logo {
       width: clamp(22px, 4vw, 45px);
@@ -154,21 +163,54 @@
       font-size: 1.8rem;
     }
     .app-header__title {
-      font-size: 1.75rem;
+      font-size: clamp(1rem, 2.5vw, 1.75rem);
       margin: 0;
       color: #f8fafc;
     }
 
-    /* Responsive: reduce el tamaño del título en móviles */
-    @media (max-width: 768px) {
+    /* Responsive: aún más pequeño en pantallas muy chicas */
+    @media (max-width: 740px) {
       .app-header__title {
-        font-size: 22px;
+        font-size: clamp(0.85rem, 5vw, 1.1rem);
+      }
+    }
+    @media (max-width: 740px) {
+      .app-header__title {
+        font-size: clamp(0.7rem, 7vw, 1rem);
       }
     }
     .app-header__subtitle {
       margin: 4px 0 0;
-      font-size: 0.82rem;
+      font-size: clamp(0.7rem, 2vw, 0.95rem);
       color: #cbd5f5;
+    }
+
+    /* Achica subtítulo solo entre 741px y 1000px */
+    @media (max-width: 1000px) and (min-width: 741px) {
+      .app-header__subtitle {
+        font-size: 0.8rem !important;
+      }
+    }
+
+    @media (max-width: 850px) {
+      .institutional-header__text {
+        display: none !important;
+      }
+    }
+
+    /* Restaurar el aviso y ocultar toda la página a menos de 740px */
+    @media (max-width: 740px) {
+      #resolution-warning {
+        display: flex !important;
+      }
+      header, main, footer, .page-content, body > *:not(#resolution-warning) {
+        display: none !important;
+      }
+    }
+    @media (max-width: 400px) {
+      .app-header__subtitle {
+        font-size: 0.28rem !important;
+      }
     }
     .app-container {
       max-width: 780px;
@@ -557,9 +599,8 @@
     }
     @media (max-width: 850px) {
       .institutional-header__name,
-      .institutional-header__full-name,
-      .institutional-header__text {
-        display: none;
+      .institutional-header__full-name {
+        font-size: 0.7rem !important;
       }
     }
     @media (max-width: 540px) {
@@ -664,7 +705,7 @@
       </div>
       <div class="app-header__center" style="min-width: 0; display: flex; flex-direction: column; align-items: center; text-align: center; margin: 0 auto;">
         <div style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; text-align: center; width: max-content;">
-          <h1 class="app-header__title">Laboratorio de Tests de Hipótesis</h1>
+          <h1 class="app-header__title">HTLab - Laboratorio de Tests de Hipótesis</h1>
           <p class="app-header__subtitle">Visualizá y compará escenarios para tus análisis estadísticos.</p>
         </div>
       </div>
