@@ -994,23 +994,42 @@
         // ===================
         function calcularBetaZ({ mu0, mu1, sigma, n, alpha, cola }) {
           const se = sigma / Math.sqrt(n);
-          const zcritRight = normInv(1 - alpha);
-          const zcritLeft  = normInv(alpha);
-          const zcritTwo   = normInv(1 - alpha/2);
+
+          // Valores críticos en Z
+          const zcritRight = normInv(1 - alpha);        // cola derecha
+          const zcritLeft  = normInv(alpha);            // cola izquierda
+          const zcritTwo   = normInv(1 - alpha / 2);    // dos colas
+
           let beta;
+
           if (cola === "derecha") {
+            // Región crítica: X̄ >= xcrit
             const xcrit = mu0 + zcritRight * se;
+            // β = P(X̄ <= xcrit | μ = μ1)
             beta = normalCDF((xcrit - mu1) / se);
+
           } else if (cola === "izquierda") {
+            // Región crítica: X̄ <= xcrit
             const xcrit = mu0 + zcritLeft * se;
+            // β = P(X̄ >= xcrit | μ = μ1) = 1 − Φ(z)
             beta = 1 - normalCDF((xcrit - mu1) / se);
+
           } else {
-            const xcritDer = mu0 + zcritTwo * se;
-            const xcritIzq = mu0 + (-zcritTwo) * se;
-            const betaDer = normalCDF((xcritDer - mu1) / se);
-            const betaIzq = 1 - normalCDF((xcritIzq - mu1) / se);
-            beta = betaDer + betaIzq;
+            // DOS COLAS: región crítica fuera de [xcritIzq, xcritDer]
+            const xcritDer = mu0 + zcritTwo * se;   // límite superior
+            const xcritIzq = mu0 - zcritTwo * se;   // límite inferior
+
+            const zDer = (xcritDer - mu1) / se;
+            const zIzq = (xcritIzq - mu1) / se;
+
+            // Región de NO rechazo: xcritIzq < X̄ < xcritDer
+            // β = Φ(zDer) − Φ(zIzq)
+            beta = normalCDF(zDer) - normalCDF(zIzq);
           }
+
+          // Seguridad numérica: forzamos a [0,1]
+          beta = Math.min(Math.max(beta, 0), 1);
+
           return { beta, potencia: 1 - beta };
         }
 // Color rojo crítico centralizado para reutilizar
