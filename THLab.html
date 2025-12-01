@@ -1238,7 +1238,8 @@ function dibujarBetaZ({ canvasId, mu0, mu1, sigma, n, alpha, cola }) {
   ctx.restore();
 }
         // Función principal para la UI de β
-        function calcularYdibujarBetaZ() {
+        // Cálculo completo de Error Tipo II (numérico + gráfico)
+        function calcularErrorTipoII() {
           const mu0 = parseFloat(document.getElementById("mu0Beta").value);
           const mu1 = parseFloat(document.getElementById("mu1Beta").value);
           const sigma = parseFloat(document.getElementById("sigmaBeta").value);
@@ -1258,18 +1259,27 @@ function dibujarBetaZ({ canvasId, mu0, mu1, sigma, n, alpha, cola }) {
           // Interpretación breve
           document.getElementById("interpretacionBeta").innerHTML =
             `Interpretación: Si la media verdadera fuera μ₁ = <strong>${mu1}</strong>, la prueba no detectaría la diferencia aproximadamente β = <strong>${beta.toFixed(4)}</strong>.<br>Potencia: La prueba detectaría la diferencia en (1 − β) = <strong>${potencia.toFixed(4)}</strong> de los casos.`;
+          actualizarGraficoBetaZ();
+        }
+
+        // Solo actualiza el gráfico de Error Tipo II según los valores actuales y la cola
+        function actualizarGraficoBetaZ() {
+          const mu0 = parseFloat(document.getElementById("mu0Beta").value);
+          const mu1 = parseFloat(document.getElementById("mu1Beta").value);
+          const sigma = parseFloat(document.getElementById("sigmaBeta").value);
+          const n = parseInt(document.getElementById("nBeta").value, 10);
+          const alpha = parseFloat(document.getElementById("alphaBeta").value);
+          const cola = document.querySelector('input[name="colaBeta"]:checked').value;
+          // Solo si los valores son válidos, actualiza el gráfico
+          if (isNaN(mu0) || isNaN(mu1) || isNaN(sigma) || isNaN(n) || isNaN(alpha)) return;
+          if (n <= 0 || sigma <= 0) return;
           dibujarBetaZ({ canvasId: "graficoBeta", mu0, mu1, sigma, n, alpha, cola });
         }
         // Listener para el botón de β
-        document.getElementById("btnCalcularBetaZ").addEventListener("click", calcularYdibujarBetaZ);
-        // Listeners para actualizar automáticamente el gráfico de Error Tipo II
-        document.getElementById("alphaBeta").addEventListener("change", calcularYdibujarBetaZ);
-        document.getElementById("mu0Beta").addEventListener("change", calcularYdibujarBetaZ);
-        document.getElementById("mu1Beta").addEventListener("change", calcularYdibujarBetaZ);
-        document.getElementById("sigmaBeta").addEventListener("change", calcularYdibujarBetaZ);
-        document.getElementById("nBeta").addEventListener("change", calcularYdibujarBetaZ);
+        document.getElementById("btnCalcularBetaZ").addEventListener("click", calcularErrorTipoII);
+        // El cambio de cola actualiza solo el gráfico, no los resultados numéricos
         document.querySelectorAll('input[name="colaBeta"]').forEach(radio => {
-          radio.addEventListener("change", calcularYdibujarBetaZ);
+          radio.addEventListener("change", actualizarGraficoBetaZ);
         });
         // ===================
         // Lógica de modo de visualización
