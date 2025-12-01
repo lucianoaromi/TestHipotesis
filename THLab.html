@@ -1066,13 +1066,15 @@ function dibujarBetaZ({ canvasId, mu0, mu1, sigma, n, alpha, cola }) {
   // Dibujar ticks y etiquetas
   for (let xTick = tickStart; xTick <= tickEnd; xTick += tickStep) {
     const xCanvas = xToCanvas(xTick);
-
-    // Tick
+    // Palito naranja
+    ctx.save();
+    ctx.strokeStyle = "#ff9800";
+    ctx.lineWidth = 3;
     ctx.beginPath();
     ctx.moveTo(xCanvas, baseY - 4);
     ctx.lineTo(xCanvas, baseY + 4);
     ctx.stroke();
-
+    ctx.restore();
     // Etiqueta (sin decimales)
     const label = xTick.toFixed(0);
     ctx.fillText(label, xCanvas - ctx.measureText(label).width / 2, baseY + 16);
@@ -1515,10 +1517,15 @@ function dibujarBetaZ({ canvasId, mu0, mu1, sigma, n, alpha, cola }) {
       const tickEnd = Math.floor(zMax);
       for (let z = tickStart; z <= tickEnd; z++) {
         const x = xToCanvas(z);
+        // Palito naranja
+        ctx.save();
+        ctx.strokeStyle = "#ff9800";
+        ctx.lineWidth = 3;
         ctx.beginPath();
         ctx.moveTo(x, baseY - 4);
         ctx.lineTo(x, baseY + 4);
         ctx.stroke();
+        ctx.restore();
         ctx.fillText(z.toString(), x - 3, baseY + 14);
       }
 
