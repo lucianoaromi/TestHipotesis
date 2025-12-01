@@ -724,7 +724,7 @@
         <select id="tipoTest" style="flex:1 1 320px; max-width:400px;">
           <option value="z" selected>Test Z (σ conocida)</option>
           <option value="t">Test t de Student (σ desconocida)</option>
-          <option value="proporciones">Test de Proporciones (una muestra)</option>
+          <option value="proporciones">Test de Proporcion (una muestra)</option>
           <option value="z_diff">Test Z: Diferencia de Medias (σ₁ y σ₂ conocidas)</option>
           <option value="t_diff">Test t: Diferencia de Medias (σ₁ y σ₂ desconocidas)</option>
           <option value="prop_diff">Test Z: Diferencia de Proporciones</option>
@@ -984,7 +984,36 @@
           }
           return { beta, potencia: 1 - beta };
         }
+// Color rojo crítico centralizado para reutilizar
+const CRITICAL_RED = '#d32f2f';
 function dibujarBetaZ({ canvasId, mu0, mu1, sigma, n, alpha, cola }) {
+  // --- Mostrar información sobre el gráfico ---
+  // (Esto debe ir al final, después de todo el dibujo)
+  try {
+    ctx.save();
+    ctx.font = "bold 15px system-ui";
+    ctx.textAlign = "center";
+    // Forzar color rojo crítico justo antes de cada fillText
+    if (cola === "derecha" && typeof xCrit1 === 'number' && isFinite(xCrit1)) {
+      const infoText = `x crítico = ${xCrit1.toFixed(2)}`;
+      ctx.fillStyle = '#2ecc40'; // Verde
+      ctx.fillText(infoText, xToCanvas(xCrit1), yToCanvas(pdf0(xCrit1)) - 12);
+    } else if (cola === "izquierda" && typeof xCrit1 === 'number' && isFinite(xCrit1)) {
+      const infoText = `x crítico = ${xCrit1.toFixed(2)}`;
+      ctx.fillStyle = '#2ecc40'; // Verde
+      ctx.fillText(infoText, xToCanvas(xCrit1), yToCanvas(pdf0(xCrit1)) - 12);
+    } else if (typeof xCrit1 === 'number' && typeof xCrit2 === 'number' && isFinite(xCrit1) && isFinite(xCrit2)) {
+      const infoTextIzq = `x crítico izq = ${xCrit1.toFixed(2)}`;
+      const infoTextDer = `x crítico der = ${xCrit2.toFixed(2)}`;
+      ctx.fillStyle = '#2ecc40'; // Verde
+      ctx.fillText(infoTextIzq, xToCanvas(xCrit1), yToCanvas(pdf0(xCrit1)) - 12);
+      ctx.fillStyle = '#2ecc40'; // Verde
+      ctx.fillText(infoTextDer, xToCanvas(xCrit2), yToCanvas(pdf0(xCrit2)) - 12);
+    }
+    ctx.restore();
+  } catch (e) {
+    // Si ocurre un error, no interrumpir el renderizado del gráfico
+  }
   const canvas = document.getElementById(canvasId);
   const ctx = canvas.getContext("2d");
   const pixelRatio = window.devicePixelRatio || 1;
@@ -1137,7 +1166,7 @@ function dibujarBetaZ({ canvasId, mu0, mu1, sigma, n, alpha, cola }) {
     fillBeta(xCrit2, maxX); 
   }
   
-  ctx.fillStyle = "rgba(255,0,0,0.25)";
+  ctx.fillStyle = "rgba(211,47,47,0.25)"; // Usar el mismo rojo crítico con transparencia
   function fillAlpha(xStart, xEnd) {
     ctx.beginPath();
     ctx.moveTo(xToCanvas(xStart), baseY);
@@ -1158,6 +1187,26 @@ function dibujarBetaZ({ canvasId, mu0, mu1, sigma, n, alpha, cola }) {
     fillAlpha(xCrit2, maxX); 
   }
   
+  // --- Mostrar información sobre el gráfico ---
+  ctx.save();
+  ctx.font = "bold 15px system-ui";
+  ctx.fillStyle = CRITICAL_RED;
+  ctx.textAlign = "center";
+  // infoText ya está declarado en este bloque, no volver a declararlo
+  if (cola === "derecha") {
+    infoText = `x crítico = ${xCrit1 !== null ? xCrit1.toFixed(2) : ''}`;
+    ctx.fillText(infoText, xToCanvas(xCrit1) + 70, yToCanvas(0) - 30);
+  } else if (cola === "izquierda") {
+    infoText = `x crítico = ${xCrit1 !== null ? xCrit1.toFixed(2) : ''}`;
+    ctx.fillText(infoText, xToCanvas(xCrit1) - 70, yToCanvas(0) - 30);
+  } else if (xCrit1 !== null && xCrit2 !== null) {
+    infoText = `x crítico = ${xCrit1.toFixed(2)}`;
+    ctx.fillText(infoText, xToCanvas(xCrit1) - 70, yToCanvas(0) - 30);
+    infoText = `x crítico = ${xCrit2.toFixed(2)}`;
+    ctx.fillText(infoText, xToCanvas(xCrit2) + 70, yToCanvas(0) - 30);
+  }
+  // Parámetros principales
+  ctx.restore();
 }
         // Función principal para la UI de β
         function calcularYdibujarBetaZ() {
@@ -2378,7 +2427,7 @@ function dibujarBetaZ({ canvasId, mu0, mu1, sigma, n, alpha, cola }) {
         xGroup.classList.remove("hidden");
         nPropGroup.classList.remove("hidden");
         p0Group.classList.remove("hidden");
-        heading.textContent = "Test de Proporciones (una muestra)";
+        heading.textContent = "Test de Proporcion (una muestra)";
         intro.innerHTML = "Se muestra la distribución normal estándar N(0,1), la región de rechazo según α y tipo de cola,<br>y la posición del estadístico observado <strong>z</strong> para la proporción.";
         statLabel.textContent = "Estadístico observado z";
         legendLabel.textContent = "z observado";
