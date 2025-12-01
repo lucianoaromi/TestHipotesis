@@ -973,10 +973,11 @@
         </div>
       </div>
       <canvas id="graficoBeta" class="chart-canvas" width="640" height="350"></canvas>
-      <div class="result-block">
-        <div id="betaValor"></div>
-        <div id="potenciaValor"></div>
-        <div id="interpretacionBeta" class="intro-text" style="margin-top:8px;"></div>
+      <div id="betaResultados" class="result-block">
+        <strong>Resultados del test:</strong>
+        <div id="betaZcalc"></div>
+        <div id="betaPotencia"></div>
+        <div id="betaInterpretacion"></div>
       </div>
       <div class="legend">
         <span class="badge rechazo">Región crítica</span>
@@ -1254,10 +1255,9 @@ function dibujarBetaZ({ canvasId, mu0, mu1, sigma, n, alpha, cola }) {
           if (n <= 0) { alert("n debe ser mayor a cero."); return; }
           if (sigma <= 0) { alert("σ debe ser mayor a cero."); return; }
           const { beta, potencia } = calcularBetaZ({ mu0, mu1, sigma, n, alpha, cola });
-          document.getElementById("betaValor").innerHTML = "β (Error Tipo II): <strong>" + beta.toFixed(4) + "</strong>";
-          document.getElementById("potenciaValor").innerHTML = "Potencia (1 − β): <strong>" + potencia.toFixed(4) + "</strong>";
-          // Interpretación breve
-          document.getElementById("interpretacionBeta").innerHTML =
+          document.getElementById("betaZcalc").innerHTML = "β (Error Tipo II): <strong>" + beta.toFixed(4) + "</strong>";
+          document.getElementById("betaPotencia").innerHTML = "Potencia (1 − β): <strong>" + potencia.toFixed(4) + "</strong>";
+          document.getElementById("betaInterpretacion").innerHTML =
             `Interpretación: Si la media verdadera fuera μ₁ = <strong>${mu1}</strong>, la prueba no detectaría la diferencia aproximadamente β = <strong>${beta.toFixed(4)}</strong>.<br>Potencia: La prueba detectaría la diferencia en (1 − β) = <strong>${potencia.toFixed(4)}</strong> de los casos.`;
           actualizarGraficoBetaZ();
         }
@@ -1309,12 +1309,12 @@ function dibujarBetaZ({ canvasId, mu0, mu1, sigma, n, alpha, cola }) {
           function limpiarResultadosSeccion(tipoTest) {
             if (tipoTest === 'betaZ') {
               // Error Tipo II: limpiar solo los resultados, no los inputs
-              const betaValor = document.getElementById('betaValor');
-              const potenciaValor = document.getElementById('potenciaValor');
-              const interpretacionBeta = document.getElementById('interpretacionBeta');
-              if (betaValor) betaValor.innerHTML = '';
-              if (potenciaValor) potenciaValor.innerHTML = '';
-              if (interpretacionBeta) interpretacionBeta.innerHTML = '';
+              const betaZcalc = document.getElementById('betaZcalc');
+              const betaPotencia = document.getElementById('betaPotencia');
+              const betaInterpretacion = document.getElementById('betaInterpretacion');
+              if (betaZcalc) betaZcalc.innerHTML = '';
+              if (betaPotencia) betaPotencia.innerHTML = '';
+              if (betaInterpretacion) betaInterpretacion.innerHTML = '';
             } else {
               // Otras secciones: limpiar todos los divs de resultados, dejando el título
               const zcalc = document.getElementById('zcalc');
