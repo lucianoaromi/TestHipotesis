@@ -2806,18 +2806,43 @@ function dibujarBetaZ({ canvasId, mu0, mu1, sigma, n, alpha, cola }) {
     });
     document.getElementById("btnCalcularZ").addEventListener("click", calcularTest);
 
+    // --- Inicialización automática del gráfico de Error Tipo II (solo la primera vez) ---
+    let graficoBetaZInicializado = false;
+
+    function inicializarGraficoBetaZSiCorresponde() {
+      // Solo ejecuta la inicialización automática la primera vez que se muestra la sección
+      if (!graficoBetaZInicializado) {
+        // Obtener valores actuales de los inputs relevantes
+        const mu0 = parseFloat(document.getElementById("mu0Beta").value);
+        const mu1 = parseFloat(document.getElementById("mu1Beta").value);
+        const sigma = parseFloat(document.getElementById("sigmaBeta").value);
+        const n = parseInt(document.getElementById("nBeta").value, 10);
+        const alpha = parseFloat(document.getElementById("alphaBeta").value);
+        const cola = document.querySelector('input[name="colaBeta"]:checked').value;
+        // Solo si los valores son válidos, dibuja el gráfico
+        if (!isNaN(mu0) && !isNaN(mu1) && !isNaN(sigma) && !isNaN(n) && !isNaN(alpha) && n > 0 && sigma > 0) {
+          dibujarBetaZ({ canvasId: "graficoBeta", mu0, mu1, sigma, n, alpha, cola });
+        }
+        graficoBetaZInicializado = true;
+      }
+    }
+
     document.getElementById("tipoTest").addEventListener("change", function() {
       actualizarTipoTest();
       actualizarModoVista();
-      // Si selecciona Error Tipo II (Z: una muestra), dibujar automáticamente
+      // Inicialización automática solo la primera vez que se selecciona Error Tipo II
       if (document.getElementById("tipoTest").value === "betaZ") {
-        calcularYdibujarBetaZ();
+        inicializarGraficoBetaZSiCorresponde();
       }
     });
 
-    window.addEventListener("load", () => {
+    window.addEventListener("DOMContentLoaded", () => {
       actualizarTipoTest();
       actualizarModoVista();
+      // Si Error Tipo II es la opción por defecto, inicializar el gráfico automáticamente
+      if (document.getElementById("tipoTest").value === "betaZ") {
+        inicializarGraficoBetaZSiCorresponde();
+      }
     });
   </script>
 </body>
