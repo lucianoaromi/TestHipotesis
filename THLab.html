@@ -1026,8 +1026,18 @@ function dibujarBetaZ({ canvasId, mu0, mu1, sigma, n, alpha, cola }) {
   ctx.clearRect(0, 0, width, height);
   ctx.fillStyle = "#edf2f7";
   ctx.fillRect(0, 0, width, height);
-  
+
   const baseY = yToCanvas(0);
+
+  // DIBUJAR LÍNEA DEL EJE X
+  ctx.save();
+  ctx.strokeStyle = "#b0b6be";
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(0, baseY);
+  ctx.lineTo(width, baseY);
+  ctx.stroke();
+  ctx.restore();
   
   // ---- TICKS DEL EJE X (Versión PRO, limpia y no amontonada) ----
   ctx.fillStyle = "#4a5568";
@@ -1172,6 +1182,15 @@ function dibujarBetaZ({ canvasId, mu0, mu1, sigma, n, alpha, cola }) {
         }
         // Listener para el botón de β
         document.getElementById("btnCalcularBetaZ").addEventListener("click", calcularYdibujarBetaZ);
+        // Listeners para actualizar automáticamente el gráfico de Error Tipo II
+        document.getElementById("alphaBeta").addEventListener("change", calcularYdibujarBetaZ);
+        document.getElementById("mu0Beta").addEventListener("change", calcularYdibujarBetaZ);
+        document.getElementById("mu1Beta").addEventListener("change", calcularYdibujarBetaZ);
+        document.getElementById("sigmaBeta").addEventListener("change", calcularYdibujarBetaZ);
+        document.getElementById("nBeta").addEventListener("change", calcularYdibujarBetaZ);
+        document.querySelectorAll('input[name="colaBeta"]').forEach(radio => {
+          radio.addEventListener("change", calcularYdibujarBetaZ);
+        });
         // ===================
         // Lógica de modo de visualización
         // ===================
