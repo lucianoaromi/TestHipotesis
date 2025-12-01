@@ -2691,9 +2691,14 @@ function dibujarBetaZ({ canvasId, mu0, mu1, sigma, n, alpha, cola }) {
       radio.addEventListener("change", dibujar);
     });
     document.getElementById("btnCalcularZ").addEventListener("click", calcularTest);
+
     document.getElementById("tipoTest").addEventListener("change", function() {
       actualizarTipoTest();
       actualizarModoVista();
+      // Si selecciona Error Tipo II (Z: una muestra), dibujar automáticamente
+      if (document.getElementById("tipoTest").value === "betaZ") {
+        calcularYdibujarBetaZ();
+      }
     });
 
     window.addEventListener("load", () => {
