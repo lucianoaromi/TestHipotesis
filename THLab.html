@@ -2031,102 +2031,144 @@ function dibujarBetaZ({ canvasId, mu0, mu1, sigma, n, alpha, cola }) {
     }
 
     function calcularProporcionesDiferencia() {
-      // Limpiar campos solo si existen
-      if (document.getElementById("phat")) document.getElementById("phat").textContent = "";
-      if (document.getElementById("advertencia")) document.getElementById("advertencia").textContent = "";
-      if (document.getElementById("diffMedias")) document.getElementById("diffMedias").textContent = "";
-      if (document.getElementById("critico")) document.getElementById("critico").textContent = "";
+  // Limpiar campos solo si existen
+  const phatText = document.getElementById("phat");
+  const advertencia = document.getElementById("advertencia");
+  const diffMedias = document.getElementById("diffMedias");
+  const criticoText = document.getElementById("critico");
 
-      const x1Input = parseFloat(document.getElementById("x1").value);
-      const n1Input = parseFloat(document.getElementById("n1").value);
-      const x2Input = parseFloat(document.getElementById("x2").value);
-      const n2Input = parseFloat(document.getElementById("n2").value);
-      const alpha = parseFloat(document.getElementById("alpha").value);
-      const cola = document.querySelector('input[name="cola"]:checked').value;
+  if (phatText) phatText.textContent = "";
+  if (advertencia) advertencia.textContent = "";
+  if (diffMedias) diffMedias.textContent = "";
+  if (criticoText) criticoText.textContent = "";
 
-      if ([x1Input, n1Input, x2Input, n2Input, alpha].some(v => isNaN(v))) {
-        alert("Completá todos los valores numéricos.");
-        return;
-      }
+  const x1Input = parseFloat(document.getElementById("x1").value);
+  const n1Input = parseFloat(document.getElementById("n1").value);
+  const x2Input = parseFloat(document.getElementById("x2").value);
+  const n2Input = parseFloat(document.getElementById("n2").value);
+  const alpha = parseFloat(document.getElementById("alpha").value);
+  const cola = document.querySelector('input[name="cola"]:checked').value;
 
-      if (!Number.isInteger(n1Input) || !Number.isInteger(n2Input)) {
-        alert("n₁ y n₂ deben ser enteros.");
-        return;
-      }
-      if (!Number.isInteger(x1Input) || !Number.isInteger(x2Input)) {
-        alert("x₁ y x₂ deben ser enteros.");
-        return;
-      }
+  // Validaciones básicas
+  if ([x1Input, n1Input, x2Input, n2Input, alpha].some(v => isNaN(v))) {
+    alert("Completá todos los valores numéricos.");
+    return;
+  }
 
-      const n1 = n1Input;
-      const n2 = n2Input;
-      const x1 = x1Input;
-      const x2 = x2Input;
+  if (!Number.isInteger(n1Input) || !Number.isInteger(n2Input)) {
+    alert("n₁ y n₂ deben ser enteros.");
+    return;
+  }
+  if (!Number.isInteger(x1Input) || !Number.isInteger(x2Input)) {
+    alert("x₁ y x₂ deben ser enteros.");
+    return;
+  }
 
-      if (n1 <= 0 || n2 <= 0) {
-        alert("n₁ y n₂ deben ser mayores a cero.");
-        return;
-      }
-      if (x1 < 0 || x1 > n1 || x2 < 0 || x2 > n2) {
-        alert("x₁ y x₂ deben estar entre 0 y n correspondiente.");
-        return;
-      }
+  const n1 = n1Input;
+  const n2 = n2Input;
+  const x1 = x1Input;
+  const x2 = x2Input;
 
-      const p1 = x1 / n1;
-      const p2 = x2 / n2;
-      const diff = p1 - p2;
-      const delta0 = 0;
-      const se = Math.sqrt((p1 * (1 - p1)) / n1 + (p2 * (1 - p2)) / n2);
+  if (n1 <= 0 || n2 <= 0) {
+    alert("n₁ y n₂ deben ser mayores a cero.");
+    return;
+  }
+  if (x1 < 0 || x1 > n1 || x2 < 0 || x2 > n2) {
+    alert("x₁ y x₂ deben estar entre 0 y n correspondiente.");
+    return;
+  }
 
-      if (!isFinite(se) || se <= 0) {
-        alert("La desviación estándar combinada no es válida para estos valores.");
-        return;
-      }
+  // Proporciones muestrales
+  const p1 = x1 / n1;
+  const p2 = x2 / n2;
+  const diff = p1 - p2;
+  const delta0 = 0; // H₀: p1 - p2 = 0
 
-      const estadistico = (diff - delta0) / se;
+  // Error estándar (no agrupado)
+  const se = Math.sqrt((p1 * (1 - p1)) / n1 + (p2 * (1 - p2)) / n2);
+  if (!isFinite(se) || se <= 0) {
+    alert("La desviación estándar combinada no es válida para estos valores.");
+    return;
+  }
 
-      let p;
-      if (cola === "derecha") {
-        p = 1 - normalCDF(estadistico);
-      } else if (cola === "izquierda") {
-        p = normalCDF(estadistico);
-      } else {
-        p = 2 * (1 - normalCDF(Math.abs(estadistico)));
-      }
-      p = Math.min(Math.max(p, 0), 1);
+  // Estadístico Z
+  const estadistico = (diff - delta0) / se;
 
-      const zcrit = getCriticalZ(alpha, "dos").zCritPos;
-      const seIC = Math.sqrt((p1 * (1 - p1)) / n1 + (p2 * (1 - p2)) / n2);
-      const margen = zcrit * seIC;
-      const li = diff - margen;
-      const ls = diff + margen;
+  // p-valor según el tipo de cola
+  let p;
+  if (cola === "derecha") {
+    p = 1 - normalCDF(estadistico);
+  } else if (cola === "izquierda") {
+    p = normalCDF(estadistico);
+  } else { // dos colas
+    p = 2 * (1 - normalCDF(Math.abs(estadistico)));
+  }
+  p = Math.min(Math.max(p, 0), 1);
 
-      document.getElementById("zObs").value = estadistico.toFixed(3);
+  // Intervalo de confianza para p1 - p2
+  const zcritDosColas = getCriticalZ(alpha, "dos").zCritPos;
+  const margen = zcritDosColas * se;
+  const li = diff - margen;
+  const ls = diff + margen;
 
-      const colaTexto = cola === "derecha" ? "derecha" : (cola === "izquierda" ? "izquierda" : "dos colas");
-      const conclusion = p <= alpha
-        ? `<span class="decision-rechazo">Rechazamos H₀</span> (p = ${p.toFixed(4)} ≤ α = ${alpha})`
-        : `<span class="decision-norechazo">No rechazamos H₀</span> (p = ${p.toFixed(4)} &gt; α = ${alpha})`;
+  // Actualizar z observado para el gráfico
+  document.getElementById("zObs").value = estadistico.toFixed(3);
 
-      document.getElementById("zcalc").innerHTML =
-        `Estadístico Z calculado: <strong>${estadistico.toFixed(3)}</strong>`;
+  // Texto según cola
+  const colaTexto =
+    cola === "derecha" ? "derecha" :
+    (cola === "izquierda" ? "izquierda" : "dos colas");
 
-      const phatText = document.getElementById("phat");
-      if (phatText) {
-        phatText.innerHTML = `Proporción muestral p̂: <strong>${phat.toFixed(4)}</strong>`;
-      }
+  const conclusion = p <= alpha
+    ? `<span class="decision-rechazo">Rechazamos H₀</span> (p = ${p.toFixed(4)} ≤ α = ${alpha})`
+    : `<span class="decision-norechazo">No rechazamos H₀</span> (p = ${p.toFixed(4)} &gt; α = ${alpha})`;
 
-      document.getElementById("pvalor").innerHTML =
-        `p-valor (${colaTexto}): <strong>${p.toFixed(4)}</strong>`;
+  // Estadístico Z calculado
+  document.getElementById("zcalc").innerHTML =
+    `Estadístico Z calculado: <strong>${estadistico.toFixed(3)}</strong>`;
 
-      document.getElementById("decision").innerHTML =
-        `Decisión: ${conclusion}`;
+  // Mostrar proporciones muestrales
+  if (phatText) {
+    phatText.innerHTML =
+      `Proporciones muestrales: p̂₁ = <strong>${p1.toFixed(4)}</strong>, ` +
+      `p̂₂ = <strong>${p2.toFixed(4)}</strong>`;
+  }
 
-      document.getElementById("ic").innerHTML =
-        `IC ${(1 - alpha) * 100}% para p₁ − p₂: <strong>[${li.toFixed(4)}, ${ls.toFixed(4)}]</strong>`;
+  // Diferencia observada
+  if (diffMedias) {
+    diffMedias.innerHTML =
+      `Diferencia observada (p̂₁ − p̂₂): <strong>${diff.toFixed(4)}</strong>`;
+  }
 
-      dibujar();
+  // Valores críticos según cola
+  if (criticoText) {
+    const criticos = getCriticalZ(alpha, cola);
+    if (cola === "dos") {
+      criticoText.innerHTML =
+        `Valor crítico: <strong>[${criticos.zCritNeg.toFixed(3)} , ${criticos.zCritPos.toFixed(3)}]</strong>`;
+    } else if (cola === "derecha") {
+      criticoText.innerHTML =
+        `Valor crítico (cola derecha): <strong>${criticos.zCritPos.toFixed(3)}</strong>`;
+    } else {
+      criticoText.innerHTML =
+        `Valor crítico (cola izquierda): <strong>${criticos.zCritNeg.toFixed(3)}</strong>`;
     }
+  }
+
+  // p-valor y decisión
+  document.getElementById("pvalor").innerHTML =
+    `p-valor (${colaTexto}): <strong>${p.toFixed(4)}</strong>`;
+
+  document.getElementById("decision").innerHTML =
+    `Decisión: ${conclusion}`;
+
+  // Intervalo de confianza
+  document.getElementById("ic").innerHTML =
+    `IC ${(1 - alpha) * 100}% para p₁ − p₂: <strong>[${li.toFixed(4)}, ${ls.toFixed(4)}]</strong>`;
+
+  // Redibujar la curva Z con el nuevo zObs
+  dibujar();
+}
 
     function calcularZDiferencia() {
       const phatText = document.getElementById("phat");
