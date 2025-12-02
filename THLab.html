@@ -2191,12 +2191,13 @@ function dibujarBetaZ({ canvasId, mu0, mu1, sigma, n, alpha, cola }) {
       `Proporciones muestrales: p̂₁ = <strong>${p1.toFixed(4)}</strong>, ` +
       `p̂₂ = <strong>${p2.toFixed(4)}</strong>`;
   }
-
+  
+  /*
   // Diferencia observada
   if (diffMedias) {
     diffMedias.innerHTML =
       `Diferencia observada (p̂₁ − p̂₂): <strong>${diff.toFixed(4)}</strong>`;
-  }
+  }*/
 
   // Valores críticos según cola
   if (criticoText) {
@@ -2319,9 +2320,10 @@ function dibujarBetaZ({ canvasId, mu0, mu1, sigma, n, alpha, cola }) {
         }
       }
 
+      /*
       if (diffMedias) {
         diffMedias.innerHTML = `Diferencia observada (X̄₁ − X̄₂): <strong>${diff.toFixed(3)}</strong>`;
-      }
+      }*/
 
       document.getElementById("pvalor").innerHTML =
         `p-valor (${colaTexto}): <strong>${p.toFixed(4)}</strong>`;
@@ -2427,10 +2429,10 @@ function dibujarBetaZ({ canvasId, mu0, mu1, sigma, n, alpha, cola }) {
           criticoText.innerHTML = `Valor crítico (cola izquierda): <strong>${criticos.zCritNeg.toFixed(3)}</strong>`;
         }
       }
-
+      /*
       if (diffMedias) {
         diffMedias.innerHTML = `Diferencia observada (X̄₁ − X̄₂): <strong>${diff.toFixed(3)}</strong>`;
-      }
+      }*/
 
       document.getElementById("pvalor").innerHTML =
         `p-valor (${colaTexto}): <strong>${p.toFixed(4)}</strong>`;
