@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Fondo circular -->
+  <circle cx="32" cy="32" r="32" fill="#111827" />
+  <!-- Texto: H₀ -->
+  <text
+    x="32"
+    y="40"
+    font-size="34"
+    text-anchor="middle"
+    fill="white"
+    font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+    H₀
+  </text>
+</svg>
