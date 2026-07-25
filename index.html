@@ -523,6 +523,11 @@
       color: var(--text-muted);
       text-transform: uppercase;
     }
+    label[for="mu0Beta"],
+    label[for="mu1Beta"],
+    label[for="sigmaBeta"] {
+      text-transform: none;
+    }
     label {
       font-size: 0.78rem;
       color: var(--text-muted);
@@ -1260,15 +1265,15 @@
           </div>
         </div>
         <div class="control-group">
-          <label for="mu0Beta">Valor hipotético (μ₀)</label>
+          <label for="mu0Beta">VALOR HIPOTÉTICO ( μ₀ )</label>
           <input type="number" id="mu0Beta" step="0.01" value="12">
         </div>
         <div class="control-group">
-          <label for="mu1Beta">Valor supuesto H₁ (μ₁)</label>
+          <label for="mu1Beta">VALOR SUPUESTO H₁ ( μ₁ )</label>
           <input type="number" id="mu1Beta" step="0.01" value="14">
         </div>
         <div class="control-group">
-          <label for="sigmaBeta">Desvío conocido (σ)</label>
+          <label for="sigmaBeta">DESVÍO CONOCIDO ( σ )</label>
           <input type="number" id="sigmaBeta" step="0.01" value="3">
         </div>
         <div class="control-group">
