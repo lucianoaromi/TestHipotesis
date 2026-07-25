@@ -840,9 +840,9 @@
       border-color: rgba(240, 85, 77, 0.35);
     }
     .badge.zobs {
-      background: var(--blue-soft);
-      color: var(--blue-strong);
-      border-color: rgba(91, 147, 255, 0.35);
+      background: var(--green-soft);
+      color: var(--green);
+      border-color: rgba(51, 196, 126, 0.35);
     }
 
     /* ---------------------------------------------------------
@@ -2042,104 +2042,196 @@ function dibujarBetaZ({ canvasId, mu0, mu1, sigma, n, alpha, cola }) {
 
       ctx.restore();
 
-      // ----- SOMBREADO DEL P-VALOR -----
-      ctx.save();
-      ctx.fillStyle = "rgba(99, 179, 237, 0.35)"; // celeste
 
-      if (!isNaN(zObs) && zObs >= zMin && zObs <= zMax) {
 
-        // --- COLA DERECHA ---
-        if (cola === "derecha") {
+    // ----- SOMBREADO DEL P-VALOR -----
+    ctx.save();
+    ctx.fillStyle = "rgba(99, 179, 237, 0.35)";
 
+    if (!isNaN(zObs) && zObs >= zMin && zObs <= zMax) {
+
+      // Cola derecha: área desde el valor observado hasta el extremo derecho
+      if (cola === "derecha") {
+        const inicio = Math.max(zObs, zMin);
+
+        ctx.beginPath();
+        ctx.moveTo(xToCanvas(inicio), baseY);
+
+        for (let z = inicio; z <= zMax; z += 0.01) {
+          ctx.lineTo(
+            xToCanvas(z),
+            yToCanvas(pdf(z))
+          );
+        }
+
+        ctx.lineTo(xToCanvas(zMax), baseY);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // Cola izquierda: área desde el extremo izquierdo hasta el observado
+      else if (cola === "izquierda") {
+        const fin = Math.min(zObs, zMax);
+
+        ctx.beginPath();
+        ctx.moveTo(xToCanvas(zMin), baseY);
+
+        for (let z = zMin; z <= fin; z += 0.01) {
+          ctx.lineTo(
+            xToCanvas(z),
+            yToCanvas(pdf(z))
+          );
+        }
+
+        ctx.lineTo(xToCanvas(fin), baseY);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // Dos colas: áreas más extremas que |z observado|
+      else if (cola === "dos") {
+        const zAbs = Math.abs(zObs);
+
+        // Cola izquierda
+        if (-zAbs >= zMin) {
           ctx.beginPath();
-          const start = Math.max(zObs, zMin);
+          ctx.moveTo(xToCanvas(zMin), baseY);
 
-          ctx.moveTo(xToCanvas(start), baseY);
-
-          for (let z = start; z <= zMax; z += 0.01) {
-            ctx.lineTo(xToCanvas(z), yToCanvas(pdf(z)));
+          for (let z = zMin; z <= -zAbs; z += 0.01) {
+            ctx.lineTo(
+              xToCanvas(z),
+              yToCanvas(pdf(z))
+            );
           }
 
-          ctx.lineTo(xToCanvas(zMax), baseY);
+          ctx.lineTo(xToCanvas(-zAbs), baseY);
           ctx.closePath();
           ctx.fill();
         }
 
-        // --- COLA IZQUIERDA ---
-        if (cola === "izquierda") {
-
-          ctx.beginPath();
-          const end = Math.min(zObs, zMax);
-
-          ctx.moveTo(xToCanvas(end), baseY);
-
-          for (let z = end; z >= zMin; z -= 0.01) {
-            ctx.lineTo(xToCanvas(z), yToCanvas(pdf(z)));
-          }
-
-          ctx.lineTo(xToCanvas(zMin), baseY);
-          ctx.closePath();
-          ctx.fill();
-        }
-
-        // --- DOS COLAS ---
-        if (cola === "dos") {
-
-          const zAbs = Math.abs(zObs);
-
-          // COLA DERECHA
+        // Cola derecha
+        if (zAbs <= zMax) {
           ctx.beginPath();
           ctx.moveTo(xToCanvas(zAbs), baseY);
 
           for (let z = zAbs; z <= zMax; z += 0.01) {
-            ctx.lineTo(xToCanvas(z), yToCanvas(pdf(z)));
+            ctx.lineTo(
+              xToCanvas(z),
+              yToCanvas(pdf(z))
+            );
           }
 
           ctx.lineTo(xToCanvas(zMax), baseY);
           ctx.closePath();
           ctx.fill();
-
-          // COLA IZQUIERDA
-          ctx.beginPath();
-          ctx.moveTo(xToCanvas(-zAbs), baseY);
-
-          for (let z = -zAbs; z >= zMin; z -= 0.01) {
-            ctx.lineTo(xToCanvas(z), yToCanvas(pdf(z)));
-          }
-
-          ctx.lineTo(xToCanvas(zMin), baseY);
-          ctx.closePath();
-          ctx.fill();
         }
       }
+    }
 
-      ctx.restore();
+    ctx.restore();
 
-      ctx.strokeStyle = "#2b6cb0";
+    // Dibujar nuevamente la curva sobre los sombreados
+    ctx.save();
+    ctx.strokeStyle = "#2b6cb0";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+
+    for (let i = 0; i <= 400; i++) {
+      const z = zMin + (i / 400) * zRange;
+      const x = xToCanvas(z);
+      const y = yToCanvas(pdf(z));
+
+      if (i === 0) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
+    }
+
+    ctx.stroke();
+    ctx.restore();
+
+    // ----- ESTADÍSTICO OBSERVADO -----
+    if (!isNaN(zObs) && zObs >= zMin && zObs <= zMax) {
+      const x = xToCanvas(zObs);
+      const yCurva = yToCanvas(pdf(zObs));
+      const textoObservado =
+        `${statPrefix} obs = ${zObs.toFixed(2)}`;
+
+      ctx.save();
+
+      // Línea vertical verde
+      ctx.strokeStyle = "#16a34a";
       ctx.lineWidth = 2;
       ctx.beginPath();
-      for (let i = 0; i <= 400; i++) {
-        const z = zMin + (i / 400) * zRange;
-        const x = xToCanvas(z);
-        const y = yToCanvas(pdf(z));
-        if (i === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-      }
+      ctx.moveTo(x, baseY);
+      ctx.lineTo(x, yCurva);
       ctx.stroke();
 
-      if (!isNaN(zObs) && zObs >= zMin && zObs <= zMax) {
-        const x = xToCanvas(zObs);
-        ctx.strokeStyle = "#3182ce";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(x, baseY);
-        ctx.lineTo(x, yToCanvas(pdf(zObs)));
-        ctx.stroke();
+      // Punto verde sobre el eje
+      ctx.fillStyle = "#22c55e";
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(x, baseY, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
 
-        ctx.fillStyle = "#2b6cb0";
-        ctx.font = "bold 16px system-ui";
-        ctx.fillText(statPrefix + " obs = " + zObs.toFixed(2), x + 4, yToCanvas(pdf(zObs)) - 4);
+      // Texto adaptable
+      ctx.font = "bold 16px system-ui";
+      ctx.fillStyle = "#15803d";
+      ctx.textBaseline = "bottom";
+
+      const anchoTexto = ctx.measureText(textoObservado).width;
+      const separacion = 10;
+      const margenCanvas = 10;
+
+      let posicionTextoX;
+      let alineacionTexto;
+
+      if (
+        x + separacion + anchoTexto
+        <= width - margenCanvas
+      ) {
+        posicionTextoX = x + separacion;
+        alineacionTexto = "left";
+
+      } else if (
+        x - separacion - anchoTexto
+        >= margenCanvas
+      ) {
+        posicionTextoX = x - separacion;
+        alineacionTexto = "right";
+
+      } else {
+        posicionTextoX = Math.max(
+          margenCanvas + anchoTexto / 2,
+          Math.min(
+            width - margenCanvas - anchoTexto / 2,
+            x
+          )
+        );
+
+        alineacionTexto = "center";
       }
+
+      const posicionTextoY = Math.min(
+        yCurva - 8,
+        baseY - 12
+      );
+
+      ctx.textAlign = alineacionTexto;
+      ctx.fillText(
+        textoObservado,
+        posicionTextoX,
+        posicionTextoY
+      );
+
+      ctx.restore();
+    }
+
+
+
 
       // Etiquetas para los valores críticos según el tipo de test
       ctx.fillStyle = "#c53030";
