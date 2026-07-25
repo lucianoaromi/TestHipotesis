@@ -332,6 +332,21 @@
         max-width: 300px;
         margin: 5px auto 0;
       }
+
+      .mobile-footer {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        padding: 16px 12px 18px;
+        border-top: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--text-faint);
+        font-size: 0.72rem;
+        line-height: 1.45;
+        text-align: center;
+      }
     }
 
     /* ---------------------------------------------------------
@@ -991,6 +1006,10 @@
       }
     }
 
+    .mobile-footer {
+      display: none;
+    }
+
     .autor-text {
       font-size: 0.85em;
     }
@@ -1314,6 +1333,11 @@
       </div>
     </div>
   </main>
+
+  <footer class="mobile-footer">
+    <span>© Luciano Aromi</span>
+    <span>v1.0 (2025–2026)</span>
+  </footer>
 
   <script>
         // ===================
