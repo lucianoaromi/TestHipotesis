@@ -600,6 +600,10 @@
       color: var(--text-muted);
       text-transform: uppercase;
     }
+    label[for="alpha"],
+    label[for="alphaBeta"] {
+      text-transform: none;
+    }
     label[for="mu0Beta"],
     label[for="mu1Beta"],
     label[for="sigmaBeta"] {
@@ -1164,7 +1168,7 @@
 
       <div class="controls">
         <div class="control-group">
-          <label for="alpha">Nivel de significancia α</label>
+          <label for="alpha">NIVEL DE SIGNIFICANCIA α</label>
           <select id="alpha">
             <option value="0.20">α = 0.20</option>
             <option value="0.15">α = 0.15</option>
