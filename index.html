@@ -278,12 +278,59 @@
       .app-header__subtitle { white-space: normal; }
     }
     @media (max-width: 420px) {
-      .institutional-header__text { display: none; }
-      .header-right { display: none; }
+      .app-header {
+        padding: 12px 0;
+      }
+
+      .institutional-header__text {
+        display: none;
+      }
+
+      .header-right {
+        display: none;
+      }
+
       .app-header-flex {
         grid-template-columns: 1fr;
-        grid-template-areas: "center";
+        grid-template-areas:
+          "left"
+          "center";
         justify-items: center;
+        align-items: center;
+        gap: 6px;
+        padding-inline: 16px;
+      }
+
+      .header-left {
+        grid-area: left;
+        justify-self: center;
+      }
+
+      .institutional-header__logo {
+        width: 42px;
+        height: auto;
+      }
+
+      .header-center {
+        grid-area: center;
+        justify-self: center;
+        width: 100%;
+      }
+
+      .app-header__title {
+        font-size: 1.05rem;
+        line-height: 1.2;
+        white-space: normal;
+        max-width: 330px;
+        margin: 0 auto;
+      }
+
+      .app-header__subtitle {
+        font-size: 0.7rem;
+        line-height: 1.35;
+        white-space: normal;
+        max-width: 300px;
+        margin: 5px auto 0;
       }
     }
 
@@ -369,17 +416,30 @@
     }
 
     @media (max-width: 600px) {
+      .test-type-selector {
+        padding: 14px;
+      }
+
       .test-type-row {
         flex-direction: column;
         align-items: stretch;
         gap: 8px;
       }
+
       .test-type-row label {
         text-align: left;
       }
+
       #tipoTest {
-        max-width: 100%;
+        flex: 0 0 auto;
+        width: 100%;
         min-width: 0;
+        max-width: 100%;
+        height: 44px;
+        min-height: 44px;
+        max-height: 44px;
+        padding: 0 12px;
+        line-height: normal;
       }
     }
 
